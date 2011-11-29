@@ -7,7 +7,12 @@ namespace coleco_o_tron
 {
     class ColecoCore
     {
-
+        enum InterruptMode
+        {
+            IM0,
+            IM1,
+            IM2
+        }
         private int regA;
         private int regB;
         private int regC;
@@ -124,6 +129,10 @@ namespace coleco_o_tron
         private int shadowRegBC;
         private int shadowRegDE;
         private int shadowRegHL;
+        private bool halted;
+        private bool IFF1;
+        private bool IFF2;
+        private InterruptMode IM;
 
         bool emulationRunning = false;
         byte[] memory = new byte[0x10000];
@@ -238,13 +247,157 @@ namespace coleco_o_tron
                         regHL = PopWordStack();
                         PushWordStack(regHL);
                         break;
+                        //Skipped some
                     case OpInfo.Instr8ADD:
-                        temp = regA + data;
-                        
+                        result = regA + data;
                         flagN = false;
-                        flagC = temp > 0xFF;
+                        flagC = result > 0xFF;
+                        flagV = result > 127;
                         flagH = ((regA & 0xF) + (data & 0xF)) > 0xF;
-                        return intZ = reg3 & 0xFF;
+                        flagS = (result & 0x80) == 0x80;
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.Instr8ADC:
+                        result = regA + data + (flagC ? 1 : 0);
+                        flagN = false;
+                        flagC = result > 0xFF;
+                        flagV = result > 127;
+                        flagH = ((regA & 0xF) + (data & 0xF) + (flagC ? 1 : 0)) > 0xF;
+                        flagS = (result & 0x80) == 0x80;
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.Instr8SUB:
+                        result = regA - data;
+                        flagN = true;
+                        flagC = result < 0x00;
+                        flagV = result < -128;
+                        flagH = ((regA & 0xF) - (data & 0xF)) < 0x00;
+                        flagS = (result & 0x80) == 0x80;
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.Instr8SBC:
+                        result = regA - data - (flagC ? 1 : 0);
+                        flagN = true;
+                        flagC = result < 0x00;
+                        flagV = result < -128;
+                        flagH = ((regA & 0xF) - (data & 0xF) - (flagC ? 1 : 0)) < 0x00;
+                        flagS = (result & 0x80) == 0x80;
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.InstrAND:
+                        result = intZ = (regA & data) & 0xFF;
+                        flagS = (result & 0x80) == 0x80;
+                        flagH = true;
+                        flagV = Parity8(result);
+                        flagN = false;
+                        flagC = false;
+                        break;
+                    case OpInfo.InstrOR:
+                        result = intZ = (regA | data) & 0xFF;
+                        flagS = (result & 0x80) == 0x80;
+                        flagH = false;
+                        flagV = Parity8(result);
+                        flagN = false;
+                        flagC = false;
+                        break;
+                    case OpInfo.InstrXOR:
+                        result = intZ = (regA ^ data) & 0xFF;
+                        flagS = (result & 0x80) == 0x80;
+                        flagH = false;
+                        flagV = Parity8(result);
+                        flagN = false;
+                        flagC = false;
+                        break;
+                    case OpInfo.InstrCP:
+                        temp = regA - data;
+                        flagN = true;
+                        flagC = temp < 0x00;
+                        flagV = temp < -128;
+                        flagH = ((regA & 0xF) - (data & 0xF)) < 0x00;
+                        flagS = (temp & 0x80) == 0x80;
+                        intZ = temp & 0xFF;
+                        break;
+                    case OpInfo.Instr8INC:
+                        result = data + 1;
+                        flagN = false;
+                        flagV = data == 0x7F;
+                        flagH = (data & 0xF) == 0xF;
+                        flagS = (result & 0x80) == 0x80;
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.Instr8DEC:
+                        result = data - 1;
+                        flagN = true;
+                        flagV = data == 0x80;
+                        flagH = (data & 0xF) == 0x00;
+                        flagS = (result & 0x80) == 0x80;
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.InstrDAA:
+                        temp = flagC ? 0x60 : 0x00;
+                        if (flagH)
+                            temp |= 0x06;
+                        if (!flagN)
+                        {
+                            if ((regA & 0xF) > 0x9)
+                                temp |= 0x06;
+                            if (regA > 0x99)
+                                temp |= 0x60;
+                            result = regA + temp;
+                        }
+                        else
+                        {
+                            result = regA - temp;
+                        }
+                        flagC = (temp & 0x60) != 0;
+                        flagH = false;
+                        flagV = Parity8(result);
+                        result = intZ = result & 0xFF;
+                        break;
+                    case OpInfo.InstrCPL:
+                        result = (~regA) & 0xFF;
+                        flagH = true;
+                        flagN = true;
+                        break;
+                    case OpInfo.InstrNEG:
+                        result = intZ = ((~regA) + 1) & 0xFF;
+                        flagS = (result & 0x80) == 0x80;
+                        flagH = (regA & 0xF) == 0;
+                        flagV = regA == 0x80;
+                        flagN = true;
+                        flagC = regA == 0;
+                        break;
+                    case OpInfo.InstrCCF:
+                        flagH = flagC;
+                        flagN = false;
+                        flagC = !flagC;
+                        break;
+                    case OpInfo.InstrSCF:
+                        flagH = false;
+                        flagN = false;
+                        flagC = true;
+                        break;
+                    case OpInfo.InstrNOP:
+                        break;
+                    case OpInfo.InstrHALT:
+                        halted = true;
+                        break;
+                    case OpInfo.InstrDI:
+                        IFF1 = false;
+                        IFF2 = false;
+                        break;
+                    case OpInfo.InstrEI:
+                        IFF1 = true;
+                        IFF2 = true;
+                        break;
+                    case OpInfo.InstrIM0:
+                        IM = InterruptMode.IM0;
+                        break;
+                    case OpInfo.InstrIM1:
+                        IM = InterruptMode.IM1;
+                        break;
+                    case OpInfo.InstrIM2:
+                        IM = InterruptMode.IM2;
                         break;
                 }
                 switch (destination)
@@ -353,6 +506,21 @@ namespace coleco_o_tron
         private void Write(int value, int address)
         {
             memory[address & 0xFF] = (byte)(value & 0xFF);
+        }
+        private bool Parity8(int reg)
+        {
+            reg &= 0xFF;
+            reg ^= reg >> 4;
+            reg &= 0xF;
+            return ((0x6996 >> reg) & 1) == 1;
+        }
+        private bool Parity16(int reg)
+        {
+            reg &= 0xFFFF;
+            reg ^= reg >> 8;
+            reg ^= reg >> 4;
+            reg &= 0xF;
+            return ((0x6996 >> reg) & 1) == 1;
         }
     }
 }

@@ -13,6 +13,27 @@ namespace coleco_o_tron
         public const int InstrEXX = 3;
         public const int InstrEXSPHL = 4;
         public const int Instr8ADD = 5;
+        public const int Instr8ADC = 6;
+        public const int Instr8SUB = 7;
+        public const int Instr8SBC = 8;
+        public const int InstrAND = 9;
+        public const int InstrOR = 10;
+        public const int InstrXOR = 11;
+        public const int InstrCP = 12;
+        public const int Instr8INC = 13;
+        public const int Instr8DEC = 14;
+        public const int InstrDAA = 15;
+        public const int InstrCPL = 16;
+        public const int InstrNEG = 17;
+        public const int InstrCCF = 18;
+        public const int InstrSCF = 19;
+        public const int InstrNOP = 20;
+        public const int InstrHALT = 21;
+        public const int InstrDI = 22;
+        public const int InstrEI = 23;
+        public const int InstrIM0 = 24;
+        public const int InstrIM1 = 25;
+        public const int InstrIM2 = 26;
 
 
         public const int LocRegB = 0;
