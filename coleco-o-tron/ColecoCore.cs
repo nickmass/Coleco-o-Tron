@@ -2,11 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace coleco_o_tron
 {
     class ColecoCore
     {
+        enum Prefix
+        {
+            None,
+            DD,
+            FD
+        }
         enum InterruptMode
         {
             IM0,
@@ -20,9 +27,13 @@ namespace coleco_o_tron
         private int regE;
         private int regH;
         private int regL;
+        private int regIXh;
+        private int regIXl;
+        private int regIYh;
+        private int regIYl;
         private int regSP;
         private int regPC;
-        private int intZ;
+        private int intZ = 1;
         private bool flagZ
         {
             get
@@ -50,8 +61,6 @@ namespace coleco_o_tron
                 if (flagS)
                     value |= 0x80;
                 if (flagZ)
-                    value |= 0x60;
-                if (flagN)
                     value |= 0x40;
                 if (flagH)
                     value |= 0x10;
@@ -121,10 +130,32 @@ namespace coleco_o_tron
                 regL = (value & 0xFF);
             }
         }
+        private int regIX
+        {
+            get
+            {
+                return ((regIXh << 8) | regIXl) & 0xFFFF;
+            }
+            set
+            {
+                regIXh = (value >> 8) & 0xFF;
+                regIXl = (value & 0xFF);
+            }
+        }
+        private int regIY
+        {
+            get
+            {
+                return ((regIYh << 8) | regIYl) & 0xFFFF;
+            }
+            set
+            {
+                regIYh = (value >> 8) & 0xFF;
+                regIYl = (value & 0xFF);
+            }
+        }
         private int regI;
         private int regR;
-        private int regIX;
-        private int regIY;
         private int shadowRegAF;
         private int shadowRegBC;
         private int shadowRegDE;
@@ -133,89 +164,40 @@ namespace coleco_o_tron
         private bool IFF1;
         private bool IFF2;
         private InterruptMode IM;
+        private Prefix prefix = Prefix.None;
 
-        bool emulationRunning = false;
+        bool emulationRunning = true;
         byte[] memory = new byte[0x10000];
         int counter;
         public void Run()
         {
+            var fs = File.OpenRead("coleco.rom");
+            for (int i = 0; i < 0x10000 && fs.CanRead; i++)
+                memory[i] = (byte)fs.ReadByte();
+            memory[0x8000] = 0xFF;
+            memory[0x8001] = 0xFF;
             int[] opTable = OpInfo.GetOps();
-            int op, source, destination, instruction, cycles, result = 0, data = 0, temp = 0;
+            int[] edOpTable = OpInfo.GetEDOps();
+            int op, opCode, source, destination, instruction, cycles, result = 0, data = 0, temp = 0;
+
+            long debugCount = 0;
+
+            File.Delete("log.txt");
+
             while (emulationRunning)
             {
-                op = opTable[Read()];
+                debugCount++;
+                opCode = Read();
+                if (debugCount < 10000 && prefix == Prefix.None)
+                    File.AppendAllText("log.txt", string.Format("{0:x4} {1:x2} AF:{2:x4} BC:{3:x4} DE:{4:x4} HL:{5:x4} IX:{6:x4} IY:{7:x4}\r\n", regPC - 1, opCode, regAF, regBC, regDE, regHL, regIX, regIY));
+                op = opTable[opCode];
                 instruction = op & 0xFF;
                 destination = (op >> 8) & 0xFF;
                 source = (op >> 16) & 0xFF;
                 cycles = (op >> 24) & 0xFF;
-                switch (source)
-                {
-                    case OpInfo.LocNone:
-                        break;
-                    case OpInfo.LocRegA:
-                        data = regA;
-                        break;
-                    case OpInfo.LocRegB:
-                        data = regB;
-                        break;
-                    case OpInfo.LocRegC:
-                        data = regC;
-                        break;
-                    case OpInfo.LocRegD:
-                        data = regD;
-                        break;
-                    case OpInfo.LocRegE:
-                        data = regE;
-                        break;
-                    case OpInfo.LocRegF:
-                        data = regF;
-                        break;
-                    case OpInfo.LocRegH:
-                        data = regH;
-                        break;
-                    case OpInfo.LocRegL:
-                        data = regL;
-                        break;
-                    case OpInfo.Loc8Immediate:
-                        data = Read();
-                        break;
-                    case OpInfo.LocAddrAF:
-                        data = Read(regAF);
-                        break;
-                    case OpInfo.LocAddrBC:
-                        data = Read(regBC);
-                        break;
-                    case OpInfo.LocAddrDE:
-                        data = Read(regDE);
-                        break;
-                    case OpInfo.LocAddrHL:
-                        data = Read(regHL);
-                        break;
-                    case OpInfo.LocRegAF:
-                        data = regAF;
-                        break;
-                    case OpInfo.LocRegBC:
-                        data = regBC;
-                        break;
-                    case OpInfo.LocRegDE:
-                        data = regDE;
-                        break;
-                    case OpInfo.LocRegHL:
-                        data = regHL;
-                        break;
-                    case OpInfo.LocAddrAbsoulute:
-                        data = Read(ReadWord());
-                        break;
-                    case OpInfo.Loc16Immediate:
-                        data = ReadWord();
-                        break;
-                    case OpInfo.Loc8Stack:
-                        data = PopStack();
-                        break;
-                    case OpInfo.Loc16Stack:
-                        data = PopWordStack();
-                        break;
-                }
+
+                data = GetSource(source);
+
                 switch (instruction)
                 {
                     case OpInfo.InstrLD:
@@ -242,12 +224,10 @@ namespace coleco_o_tron
                         regHL = shadowRegHL;
                         shadowRegHL = temp;
                         break;
-                    case OpInfo.InstrEXSPHL:
-                        temp = regHL;
-                        regHL = PopWordStack();
-                        PushWordStack(regHL);
+                    case OpInfo.InstrEXSP:
+                        result = PopWordStack();
+                        PushWordStack(data);
                         break;
-                        //Skipped some
                     case OpInfo.Instr8ADD:
                         result = regA + data;
                         flagN = false;
@@ -359,14 +339,6 @@ namespace coleco_o_tron
                         flagH = true;
                         flagN = true;
                         break;
-                    case OpInfo.InstrNEG:
-                        result = intZ = ((~regA) + 1) & 0xFF;
-                        flagS = (result & 0x80) == 0x80;
-                        flagH = (regA & 0xF) == 0;
-                        flagV = regA == 0x80;
-                        flagN = true;
-                        flagC = regA == 0;
-                        break;
                     case OpInfo.InstrCCF:
                         flagH = flagC;
                         flagN = false;
@@ -380,7 +352,7 @@ namespace coleco_o_tron
                     case OpInfo.InstrNOP:
                         break;
                     case OpInfo.InstrHALT:
-                        halted = true;
+                        regPC = (regPC - 1) & 0xFFFF;
                         break;
                     case OpInfo.InstrDI:
                         IFF1 = false;
@@ -390,34 +362,11 @@ namespace coleco_o_tron
                         IFF1 = true;
                         IFF2 = true;
                         break;
-                    case OpInfo.InstrIM0:
-                        IM = InterruptMode.IM0;
-                        break;
-                    case OpInfo.InstrIM1:
-                        IM = InterruptMode.IM1;
-                        break;
-                    case OpInfo.InstrIM2:
-                        IM = InterruptMode.IM2;
-                        break;
                     case OpInfo.InstrADD:
                         result = (regHL + data);
                         flagN = false;
                         flagH = ((regHL ^ data ^ (result & 0xFFFF)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
                         flagC = result > 0xFFFF;
-                        result = result & 0xFFFF;
-                        break;
-                    case OpInfo.InstrADC:
-                        result = regHL + data + (flagC ? 1 : 0);
-                        flagN = false;
-                        flagH = ((regHL ^ data ^ (result & 0xFFFF) ^ (flagC ? 1 : 0)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
-                        flagC = result > 0xFFFF;
-                        result = result & 0xFFFF;
-                        break;
-                    case OpInfo.InstrSBC:
-                        result = regHL - data - (flagC ? 1 : 0);
-                        flagN = false;
-                        flagH = ((regHL ^ data ^ (result & 0xFFFF) ^ (flagC ? 1 : 0)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
-                        flagC = result < 0x00;
                         result = result & 0xFFFF;
                         break;
                     case OpInfo.InstrINC:
@@ -452,132 +401,37 @@ namespace coleco_o_tron
                         flagH = false;
                         flagN = false;
                         break;
-                    case OpInfo.InstrRLC:
-                        flagC = (data & 0x80) == 0x80;
-                        result = ((data << 1) | (flagC ? 0x01 : 0x00)) & 0xFF;
-                        flagS = (result & 0x80) == 0x80;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrRL:
-                        temp = data;
-                        result = ((data << 1) | (flagC ? 0x01 : 0x00)) & 0xFF;
-                        flagC = (temp & 0x80) == 0x80;
-                        flagS = (result & 0x80) == 0x80;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrRRC:
-                        flagC = (data & 0x01) == 0x01;
-                        result = ((data >> 1) | (flagC ? 0x80 : 0x00)) & 0xFF;
-                        flagS = (result & 0x80) == 0x80;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrRR:
-                        temp = data;
-                        result = ((data >> 1) | (flagC ? 0x80 : 0x00)) & 0xFF;
-                        flagC = (temp & 0x01) == 0x01;
-                        flagS = (result & 0x80) == 0x80;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrSLA:
-                        result = data << 1;
-                        flagS = (result & 0x80) == 0x80;
-                        flagC = (data & 0x80) == 0x80;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrSRA:
-                        result = (data >> 1) | (data & 0x80);
-                        flagS = (result & 0x80) == 0x80;
-                        flagC = (data & 0x01) == 0x01;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrSRL:
-                        result = data >> 1;
-                        flagC = (data & 0x01) == 0x01;
-                        flagS = false;
-                        flagC = (data & 0x01) == 0x01;
-                        intZ = result;
-                        flagV = Parity8(result);
-                        flagH = false;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrRLD:
-                        result = ((data << 4) | (regA & 0x0F)) & 0xFF;
-                        regA = ((regA & 0xF0) | ((data >> 4) & 0x0F)) & 0xFF;
-                        flagS = (regA & 0x80) == 0x80;
-                        intZ = regA;
-                        flagH = false;
-                        flagV = Parity8(regA);
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrRRD:
-                        result = (((data >> 4) & 0x0F) | ((regA << 4) & 0xF0)) & 0xFF;
-                        regA = ((regA & 0xF0) | (data & 0x0F)) & 0xFF;
-                        flagS = (regA & 0x80) == 0x80;
-                        intZ = regA;
-                        flagH = false;
-                        flagV = Parity8(regA);
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrBIT:
-                        flagZ = (temp & data) == 0;
-                        flagH = true;
-                        flagN = false;
-                        break;
-                    case OpInfo.InstrSET:
-                        result = (data | temp) & 0xFF;
-                        break;
-                    case OpInfo.InstrRES:
-                        result = (data & ~temp) & 0xFF;
-                        break;
                     case OpInfo.InstrJP:
                         regPC = data;
                         break;
                     case OpInfo.InstrJPc:
                         {
                             bool takeJump = false;
-                            switch (temp)
+                            switch ((opCode >> 3) & 7)
                             {
                                 case 0:
-                                    takeJump = flagZ;
-                                    break;
-                                case 1:
                                     takeJump = !flagZ;
                                     break;
-                                case 2:
-                                    takeJump = flagC;
+                                case 1:
+                                    takeJump = flagZ;
                                     break;
-                                case 3:
+                                case 2:
                                     takeJump = !flagC;
                                     break;
-                                case 4:
-                                    takeJump = flagV;
+                                case 3:
+                                    takeJump = flagC;
                                     break;
-                                case 5:
+                                case 4:
                                     takeJump = !flagV;
                                     break;
+                                case 5:
+                                    takeJump = flagV;
+                                    break;
                                 case 6:
-                                    takeJump = flagS;
+                                    takeJump = !flagS;
                                     break;
                                 case 7:
-                                    takeJump = !flagS;
+                                    takeJump = flagS;
                                     break;
                             }
                             if (takeJump)
@@ -586,7 +440,7 @@ namespace coleco_o_tron
                         break;
                     case OpInfo.InstrJR:
                         if ((data & 0x80) == 0x80)
-                            data = (data & 0xEF) * -1;
+                            data = (sbyte)(data & 0xFF);
                         regPC += data;
                         break;
                     case OpInfo.InstrJRC:
@@ -617,31 +471,31 @@ namespace coleco_o_tron
                     case OpInfo.InstrCALLc:
                         {
                             bool takeCall = false;
-                            switch (temp)
+                            switch ((opCode >> 3) & 7)
                             {
                                 case 0:
-                                    takeCall = flagZ;
-                                    break;
-                                case 1:
                                     takeCall = !flagZ;
                                     break;
-                                case 2:
-                                    takeCall = flagC;
+                                case 1:
+                                    takeCall = flagZ;
                                     break;
-                                case 3:
+                                case 2:
                                     takeCall = !flagC;
                                     break;
-                                case 4:
-                                    takeCall = flagV;
+                                case 3:
+                                    takeCall = flagC;
                                     break;
-                                case 5:
+                                case 4:
                                     takeCall = !flagV;
                                     break;
+                                case 5:
+                                    takeCall = flagV;
+                                    break;
                                 case 6:
-                                    takeCall = flagS;
+                                    takeCall = !flagS;
                                     break;
                                 case 7:
-                                    takeCall = !flagS;
+                                    takeCall = flagS;
                                     break;
                             }
                             if (takeCall)
@@ -654,49 +508,536 @@ namespace coleco_o_tron
                     case OpInfo.InstrRETc:
                         {
                             bool takeRet = false;
-                            switch (temp)
+                            switch ((opCode >> 3) & 7)
                             {
                                 case 0:
-                                    takeRet = flagZ;
-                                    break;
-                                case 1:
                                     takeRet = !flagZ;
                                     break;
-                                case 2:
-                                    takeRet = flagC;
+                                case 1:
+                                    takeRet = flagZ;
                                     break;
-                                case 3:
+                                case 2:
                                     takeRet = !flagC;
                                     break;
-                                case 4:
-                                    takeRet = flagV;
+                                case 3:
+                                    takeRet = flagC;
                                     break;
-                                case 5:
+                                case 4:
                                     takeRet = !flagV;
                                     break;
+                                case 5:
+                                    takeRet = flagV;
+                                    break;
                                 case 6:
-                                    takeRet = flagS;
+                                    takeRet = !flagS;
                                     break;
                                 case 7:
-                                    takeRet = !flagS;
+                                    takeRet = flagS;
                                     break;
                             }
                             if (takeRet)
                                 goto case OpInfo.InstrRET;
                         }
                         break;
-                    case OpInfo.InstrRETI:
-                        regPC = PopWordStack();
-                        break;
-                    case OpInfo.InstrRETN:
-                        IFF1 = IFF2;
-                        regPC = PopWordStack();
-                        break;
                     case OpInfo.InstrRST:
                         PushWordStack(regPC);
-                        regPC = data << 3;
+                        regPC = opCode & 0x38;
                         break;
+                    case OpInfo.InstrINA:
+                        regA = In(data);
+                        break;
+                    case OpInfo.InstrOUTA:
+                        Out(regA, data);
+                        break;
+                    case OpInfo.PrefixCB:
+                        var bitOp = Read();
+                        cycles = 2; //TODO - WRONG WRONG WRONG
+                        switch(bitOp & 0x7)
+                        {
+                            case 0:
+                                source = OpInfo.LocRegB;
+                                break;
+                            case 1:
+                                source = OpInfo.LocRegC;
+                                break;
+                            case 2:
+                                source = OpInfo.LocRegD;
+                                break;
+                            case 3:
+                                source = OpInfo.LocRegE;
+                                break;
+                            case 4:
+                                source = OpInfo.LocRegH;
+                                break;
+                            case 5:
+                                source = OpInfo.LocRegL;
+                                break;
+                            case 6:
+                                source = OpInfo.LocAddrHL;
+                                cycles += 2;
+                                break;
+                            case 7:
+                                source = OpInfo.LocRegA;
+                                break;
+                        }
+                        destination = source;
+                        data = GetSource(source);
 
+                        switch ((bitOp & 0xF8) >> 3)
+                        {
+                            case 0:
+                                instruction = OpInfo.InstrRLC;
+                                break;
+                            case 1:
+                                instruction = OpInfo.InstrRRC;
+                                break;
+                            case 2:
+                                instruction = OpInfo.InstrRL;
+                                break;
+                            case 3:
+                                instruction = OpInfo.InstrRR;
+                                break;
+                            case 4:
+                                instruction = OpInfo.InstrSLA;
+                                break;
+                            case 5:
+                                instruction = OpInfo.InstrSRA;
+                                break;
+                            case 6:
+                                instruction = OpInfo.InstrSLL;
+                                break;
+                            case 7:
+                                instruction = OpInfo.InstrSRL;
+                                break;
+                            default:
+                                switch ((bitOp & 0xC0) >> 6)
+                                {
+                                    case 1:
+                                        instruction = OpInfo.InstrBIT;
+                                        break;
+                                    case 2:
+                                        instruction = OpInfo.InstrRES;
+                                        break;
+                                    case 3:
+                                        instruction = OpInfo.InstrSET;
+                                        break;
+                                }
+                                break;
+                        }
+
+                        switch (instruction)
+                        {
+                            case OpInfo.InstrRLC:
+                                flagC = (data & 0x80) == 0x80;
+                                result = ((data << 1) | (flagC ? 0x01 : 0x00)) & 0xFF;
+                                flagS = (result & 0x80) == 0x80;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrRL:
+                                temp = data;
+                                result = ((data << 1) | (flagC ? 0x01 : 0x00)) & 0xFF;
+                                flagC = (temp & 0x80) == 0x80;
+                                flagS = (result & 0x80) == 0x80;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrRRC:
+                                flagC = (data & 0x01) == 0x01;
+                                result = ((data >> 1) | (flagC ? 0x80 : 0x00)) & 0xFF;
+                                flagS = (result & 0x80) == 0x80;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrRR:
+                                temp = data;
+                                result = ((data >> 1) | (flagC ? 0x80 : 0x00)) & 0xFF;
+                                flagC = (temp & 0x01) == 0x01;
+                                flagS = (result & 0x80) == 0x80;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrSLA:
+                                result = data << 1;
+                                flagS = (result & 0x80) == 0x80;
+                                flagC = (data & 0x80) == 0x80;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrSRA:
+                                result = (data >> 1) | (data & 0x80);
+                                flagS = (result & 0x80) == 0x80;
+                                flagC = (data & 0x01) == 0x01;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrSLL:
+                                result = data << 1;
+                                flagC = (data & 0x80) == 0x80;
+                                flagS = false;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrSRL:
+                                result = data >> 1;
+                                flagC = (data & 0x01) == 0x01;
+                                flagS = false;
+                                intZ = result;
+                                flagV = Parity8(result);
+                                flagH = false;
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrBIT:
+                                switch ((bitOp >> 3) & 7)
+                                {
+                                    case 0:
+                                        temp = 1;
+                                        break;
+                                    case 1:
+                                        temp = 2;
+                                        break;
+                                    case 2:
+                                        temp = 4;
+                                        break;
+                                    case 3:
+                                        temp = 8;
+                                        break;
+                                    case 4:
+                                        temp = 0x10;
+                                        break;
+                                    case 5:
+                                        temp = 0x20;
+                                        break;
+                                    case 6:
+                                        temp = 0x40;
+                                        break;
+                                    case 7:
+                                        temp = 0x80;
+                                        break;
+                                }
+                                flagZ = (temp & data) == 0;
+                                flagH = true;
+                                flagN = false;
+                                destination = OpInfo.LocNone;
+                                break;
+                            case OpInfo.InstrRES:
+                                switch ((bitOp >> 3) & 7)
+                                {
+                                    case 0:
+                                        temp = 1;
+                                        break;
+                                    case 1:
+                                        temp = 2;
+                                        break;
+                                    case 2:
+                                        temp = 4;
+                                        break;
+                                    case 3:
+                                        temp = 8;
+                                        break;
+                                    case 4:
+                                        temp = 0x10;
+                                        break;
+                                    case 5:
+                                        temp = 0x20;
+                                        break;
+                                    case 6:
+                                        temp = 0x40;
+                                        break;
+                                    case 7:
+                                        temp = 0x80;
+                                        break;
+                                }
+                                result = (data & ~temp) & 0xFF;
+                                break;
+                            case OpInfo.InstrSET:
+                                switch ((bitOp >> 3) & 7)
+                                {
+                                    case 0:
+                                        temp = 1;
+                                        break;
+                                    case 1:
+                                        temp = 2;
+                                        break;
+                                    case 2:
+                                        temp = 4;
+                                        break;
+                                    case 3:
+                                        temp = 8;
+                                        break;
+                                    case 4:
+                                        temp = 0x10;
+                                        break;
+                                    case 5:
+                                        temp = 0x20;
+                                        break;
+                                    case 6:
+                                        temp = 0x40;
+                                        break;
+                                    case 7:
+                                        temp = 0x80;
+                                        break;
+                                }
+                                result = (data | temp) & 0xFF;
+                                break;
+                        }
+                        break;
+                    case OpInfo.PrefixED:
+                        opCode = Read();
+                        op = edOpTable[opCode];
+                        instruction = op & 0xFF;
+                        destination = (op >> 8) & 0xFF;
+                        source = (op >> 16) & 0xFF;
+                        cycles = (op >> 24) & 0xFF;
+
+                        data = GetSource(source);
+
+                        switch (instruction)
+                        {
+                            case OpInfo.InstrNOP:
+                                break;
+                            case OpInfo.InstrLD:
+                                result = data;
+                                break;
+                            case OpInfo.InstrIN:
+                                result = In(regC);
+                                break;
+                            case OpInfo.InstrINI:
+                                Write(In(regC), regHL);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL + 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = (regB - 1) == 0;
+                                break;
+                            case OpInfo.InstrINIR:
+                                Write(In(regC), regHL);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL + 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = true;
+                                if (regB != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrIND:
+                                Write(In(regC), regHL);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL - 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = (regB - 1) == 0;
+                                break;
+                            case OpInfo.InstrINDR:
+                                Write(In(regC), regHL);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL - 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = true;
+                                if (regB != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrOUT:
+                                Out(data, regC);
+                                break;
+                            case OpInfo.InstrOUTI:
+                                Out(data, regC);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL + 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = (regB - 1) == 0;
+                                break;
+                            case OpInfo.InstrOUTIR:
+                                Out(data, regC);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL + 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = true;
+                                if (regB != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrOUTD:
+                                Out(data, regC);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL - 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = (regB - 1) == 0;
+                                break;
+                            case OpInfo.InstrOUTDR:
+                                Out(data, regC);
+                                regB = (regB - 1) & 0xFF;
+                                regHL = (regHL - 1) & 0xFFFF;
+                                flagN = true;
+                                flagZ = true;
+                                if (regB != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrADC:
+                                result = regHL + data + (flagC ? 1 : 0);
+                                flagN = false;
+                                flagH = ((regHL ^ data ^ (result & 0xFFFF) ^ (flagC ? 1 : 0)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
+                                flagC = result > 0xFFFF;
+                                result = result & 0xFFFF;
+                                break;
+                            case OpInfo.InstrSBC:
+                                result = regHL - data - (flagC ? 1 : 0);
+                                flagN = false;
+                                flagH = ((regHL ^ data ^ (result & 0xFFFF) ^ (flagC ? 1 : 0)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
+                                flagC = result < 0x00;
+                                result = result & 0xFFFF;
+                                break;
+                            case OpInfo.InstrNEG:
+                                result = intZ = ((~regA) + 1) & 0xFF;
+                                flagS = (result & 0x80) == 0x80;
+                                flagH = (regA & 0xF) == 0;
+                                flagV = regA == 0x80;
+                                flagN = true;
+                                flagC = regA == 0;
+                                break;
+                            case OpInfo.InstrRETI:
+                                regPC = PopWordStack();
+                                break;
+                            case OpInfo.InstrRETN:
+                                IFF1 = IFF2;
+                                regPC = PopWordStack();
+                                break;
+                            case OpInfo.InstrIM0:
+                                IM = InterruptMode.IM0;
+                                break;
+                            case OpInfo.InstrIM1:
+                                IM = InterruptMode.IM1;
+                                break;
+                            case OpInfo.InstrIM2:
+                                IM = InterruptMode.IM2;
+                                break;
+                            case OpInfo.InstrRLD:
+                                result = ((data << 4) | (regA & 0x0F)) & 0xFF;
+                                regA = ((regA & 0xF0) | ((data >> 4) & 0x0F)) & 0xFF;
+                                flagS = (regA & 0x80) == 0x80;
+                                intZ = regA;
+                                flagH = false;
+                                flagV = Parity8(regA);
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrRRD:
+                                result = (((data >> 4) & 0x0F) | ((regA << 4) & 0xF0)) & 0xFF;
+                                regA = ((regA & 0xF0) | (data & 0x0F)) & 0xFF;
+                                flagS = (regA & 0x80) == 0x80;
+                                intZ = regA;
+                                flagH = false;
+                                flagV = Parity8(regA);
+                                flagN = false;
+                                break;
+                            case OpInfo.InstrLDI:
+                                Write(Read(regHL), Read(regDE));
+                                regDE = (regDE + 1) & 0xFFFF;
+                                regHL = (regHL + 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagH = false;
+                                flagN = false;
+                                flagV = (regBC - 1 != 0);
+                                break;
+                            case OpInfo.InstrLDIR:
+                                Write(Read(regHL), Read(regDE));
+                                regDE = (regDE + 1) & 0xFFFF;
+                                regHL = (regHL + 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagH = false;
+                                flagN = false;
+                                flagV = false;
+                                if (regBC != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrLDD:
+                                Write(Read(regHL), Read(regDE));
+                                regDE = (regDE - 1) & 0xFFFF;
+                                regHL = (regHL - 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagH = false;
+                                flagN = false;
+                                flagV = (regBC - 1 != 0);
+                                break;
+                            case OpInfo.InstrLDDR:
+                                Write(Read(regHL), Read(regDE));
+                                regDE = (regDE - 1) & 0xFFFF;
+                                regHL = (regHL - 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagH = false;
+                                flagN = false;
+                                flagV = false;
+                                if (regBC != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrCPI:
+                                temp = Read(regHL);
+                                regHL = (regHL + 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagN = true;
+                                flagV = (regBC - 1 != 0);
+                                flagH = ((regA & 0xF) - (temp & 0xF)) < 0x00;
+                                temp = regA - temp;
+                                flagS = (temp & 0x80) == 0x80;
+                                intZ = temp & 0xFF;
+                                break;
+                            case OpInfo.InstrCPIR:
+                                temp = Read(regHL);
+                                regHL = (regHL + 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagN = true;
+                                flagV = (regBC - 1 != 0);
+                                flagH = ((regA & 0xF) - (temp & 0xF)) < 0x00;
+                                temp = regA - temp;
+                                flagS = (temp & 0x80) == 0x80;
+                                intZ = temp & 0xFF;
+                                if (regBC != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                            case OpInfo.InstrCPD:
+                                temp = Read(regHL);
+                                regHL = (regHL - 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagN = true;
+                                flagV = (regBC - 1 != 0);
+                                flagH = ((regA & 0xF) - (temp & 0xF)) < 0x00;
+                                temp = regA - temp;
+                                flagS = (temp & 0x80) == 0x80;
+                                intZ = temp & 0xFF;
+                                break;
+                            case OpInfo.InstrCPDR:
+                                temp = Read(regHL);
+                                regHL = (regHL - 1) & 0xFFFF;
+                                regBC = (regBC - 1) & 0xFFFF;
+                                flagN = true;
+                                flagV = (regBC - 1 != 0);
+                                flagH = ((regA & 0xF) - (temp & 0xF)) < 0x00;
+                                temp = regA - temp;
+                                flagS = (temp & 0x80) == 0x80;
+                                intZ = temp & 0xFF;
+                                if (regBC != 0)
+                                    regPC = (regPC - 2) & 0xFFFF;
+                                break;
+                        }
+
+                        break;
+                    case OpInfo.PrefixDD:
+                        prefix = Prefix.DD;
+                        continue;
+                        break;
+                    case OpInfo.PrefixFD:
+                        prefix = Prefix.FD;
+                        continue;
+                        break;
 
                 }
                 switch (destination)
@@ -722,10 +1063,20 @@ namespace coleco_o_tron
                         regF = result;
                         break;
                     case OpInfo.LocRegH:
-                        regH = result;
+                        if (prefix == Prefix.DD)
+                            regIXh = result;
+                        else if (prefix == Prefix.FD)
+                            regIYh = result;
+                        else 
+                            regH = result;
                         break;
                     case OpInfo.LocRegL:
-                        regL = result;
+                        if (prefix == Prefix.DD)
+                            regIXl = result;
+                        else if (prefix == Prefix.FD)
+                            regIYl = result;
+                        else
+                            regL = result;
                         break;
                     case OpInfo.LocAddrAF:
                         Write(result, regAF);
@@ -737,7 +1088,12 @@ namespace coleco_o_tron
                         Write(result, regDE);
                         break;
                     case OpInfo.LocAddrHL:
-                        Write(result, regHL);
+                        if (prefix == Prefix.DD)
+                            Write(result, regIX + (sbyte)Read());
+                        else if (prefix == Prefix.FD)
+                            Write(result, regIY + (sbyte)Read());
+                        else
+                            Write(result, regHL);
                         break;
                     case OpInfo.LocRegAF:
                         regAF = result;
@@ -749,7 +1105,15 @@ namespace coleco_o_tron
                         regDE = result;
                         break;
                     case OpInfo.LocRegHL:
-                        regHL = result;
+                        if (prefix == Prefix.DD)
+                            regIX = result;
+                        else if (prefix == Prefix.FD)
+                            regIY = result;
+                        else
+                            regHL = result;
+                        break;
+                    case OpInfo.LocRegSP:
+                        regSP = result;
                         break;
                     case OpInfo.LocAddrAbsoulute:
                         Write(result, ReadWord());
@@ -760,8 +1124,18 @@ namespace coleco_o_tron
                     case OpInfo.Loc16Stack:
                         PushWordStack(result);
                         break;
+                    case OpInfo.Loc16AddrAbsoulute:
+                        WriteWord(result, ReadWord());
+                        break;
+                    case OpInfo.LocRegI:
+                        regI = result;
+                        break;
+                    case OpInfo.LocRegR:
+                        regR = result;
+                        break;
                 }
                 counter += cycles;
+                prefix = Prefix.None;
             }
         }
 
@@ -771,8 +1145,9 @@ namespace coleco_o_tron
         }
         private byte Read()
         {
+            var data = Read(regPC);
             regPC = (regPC + 1) & 0xFFFF;
-            return Read(regPC);
+            return data;
         }
         private ushort ReadWord()
         {
@@ -804,14 +1179,30 @@ namespace coleco_o_tron
         }
         private void Write(int value, int address)
         {
-            memory[address & 0xFF] = (byte)(value & 0xFF);
+            if(address >= 0x2000 && address < 0x8000)
+                memory[address & 0xFFFF] = (byte)(value & 0xFF);
+        }
+
+        private void WriteWord(int value, int address)
+        {
+            Write(value, address);
+            Write(value >> 1, address + 1);
+        }
+
+        private void Out(int value, int address)
+        {
+            
+        }
+        private byte In(int address)
+        {
+            return 0x00;
         }
         private static bool Parity8(int reg)
         {
             reg &= 0xFF;
             reg ^= reg >> 4;
             reg &= 0xF;
-            return ((0x6996 >> reg) & 1) == 1;
+            return ((0x6996 >> reg) & 1) != 1;
         }
         private static bool Parity16(int reg)
         {
@@ -819,7 +1210,82 @@ namespace coleco_o_tron
             reg ^= reg >> 8;
             reg ^= reg >> 4;
             reg &= 0xF;
-            return ((0x6996 >> reg) & 1) == 1;
+            return ((0x6996 >> reg) & 1) != 1;
+        }
+        private int GetSource(int source)
+        {
+            switch (source)
+            {
+                case OpInfo.LocNone:
+                    return 0;
+                case OpInfo.LocRegA:
+                    return regA;
+                case OpInfo.LocRegB:
+                    return regB;
+                case OpInfo.LocRegC:
+                    return regC;
+                case OpInfo.LocRegD:
+                    return regD;
+                case OpInfo.LocRegE:
+                    return regE;
+                case OpInfo.LocRegF:
+                    return regF;
+                case OpInfo.LocRegH:
+                    if (prefix == Prefix.DD)
+                        return regIXh;
+                    if (prefix == Prefix.FD)
+                        return regIYh;
+                    return regH;
+                case OpInfo.LocRegL:
+                    if (prefix == Prefix.DD)
+                        return regIXl;
+                    if (prefix == Prefix.FD)
+                        return regIYl;
+                    return regL;
+                case OpInfo.Loc8Immediate:
+                    return Read();
+                case OpInfo.LocAddrAF:
+                    return Read(regAF);
+                case OpInfo.LocAddrBC:
+                    return Read(regBC);
+                case OpInfo.LocAddrDE:
+                    return Read(regDE);
+                case OpInfo.LocAddrHL:
+                    if (prefix == Prefix.DD)
+                        return Read(regIX + (sbyte)Read());
+                    if (prefix == Prefix.FD)
+                        return Read(regIY + (sbyte)Read());
+                    return Read(regHL);
+                case OpInfo.LocRegAF:
+                    return regAF;
+                case OpInfo.LocRegBC:
+                    return regBC;
+                case OpInfo.LocRegDE:
+                    return regDE;
+                case OpInfo.LocRegHL:
+                    if (prefix == Prefix.DD)
+                        return regIX;
+                    if (prefix == Prefix.FD)
+                        return regIY;
+                    return regHL;
+                case OpInfo.LocRegSP:
+                    return regSP;
+                case OpInfo.LocAddrAbsoulute:
+                    return Read(ReadWord());
+                case OpInfo.Loc16Immediate:
+                    return ReadWord();
+                case OpInfo.Loc8Stack:
+                    return PopStack();
+                case OpInfo.Loc16Stack:
+                    return PopWordStack();
+                case OpInfo.Loc16AddrAbsoulute:
+                    return ReadWord(ReadWord());
+                case OpInfo.LocRegI:
+                    return regI;
+                case OpInfo.LocRegR:
+                    return regR;
+            }
+            return 0;
         }
     }
 }

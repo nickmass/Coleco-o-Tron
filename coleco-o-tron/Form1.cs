@@ -14,6 +14,8 @@ namespace coleco_o_tron
         public Form1()
         {
             InitializeComponent();
+            ColecoCore core = new ColecoCore();
+            core.Run();
         }
     }
 }
