@@ -374,11 +374,11 @@ namespace coleco_o_tron
 
             SetOp(0x87, Instr8ADD, LocRegA, LocRegA, 1);
             SetOp(0x80, Instr8ADD, LocRegA, LocRegB, 1);
-            SetOp(0x81, Instr8ADD, LocRegA, LocRegB, 1);
-            SetOp(0x82, Instr8ADD, LocRegA, LocRegB, 1);
-            SetOp(0x83, Instr8ADD, LocRegA, LocRegB, 1);
-            SetOp(0x84, Instr8ADD, LocRegA, LocRegB, 1);
-            SetOp(0x85, Instr8ADD, LocRegA, LocRegB, 1);
+            SetOp(0x81, Instr8ADD, LocRegA, LocRegC, 1);
+            SetOp(0x82, Instr8ADD, LocRegA, LocRegD, 1);
+            SetOp(0x83, Instr8ADD, LocRegA, LocRegE, 1);
+            SetOp(0x84, Instr8ADD, LocRegA, LocRegH, 1);
+            SetOp(0x85, Instr8ADD, LocRegA, LocRegL, 1);
 
             SetOp(0xC6, Instr8ADD, LocRegA, Loc8Immediate, 2);
 
@@ -386,11 +386,11 @@ namespace coleco_o_tron
 
             SetOp(0x8F, Instr8ADC, LocRegA, LocRegA, 1);
             SetOp(0x88, Instr8ADC, LocRegA, LocRegB, 1);
-            SetOp(0x89, Instr8ADC, LocRegA, LocRegB, 1);
-            SetOp(0x8A, Instr8ADC, LocRegA, LocRegB, 1);
-            SetOp(0x8B, Instr8ADC, LocRegA, LocRegB, 1);
-            SetOp(0x8C, Instr8ADC, LocRegA, LocRegB, 1);
-            SetOp(0x8D, Instr8ADC, LocRegA, LocRegB, 1);
+            SetOp(0x89, Instr8ADC, LocRegA, LocRegC, 1);
+            SetOp(0x8A, Instr8ADC, LocRegA, LocRegD, 1);
+            SetOp(0x8B, Instr8ADC, LocRegA, LocRegE, 1);
+            SetOp(0x8C, Instr8ADC, LocRegA, LocRegH, 1);
+            SetOp(0x8D, Instr8ADC, LocRegA, LocRegL, 1);
 
             SetOp(0xCE, Instr8ADC, LocRegA, Loc8Immediate, 2);
 
@@ -398,11 +398,11 @@ namespace coleco_o_tron
 
             SetOp(0x97, Instr8SUB, LocRegA, LocRegA, 1);
             SetOp(0x90, Instr8SUB, LocRegA, LocRegB, 1);
-            SetOp(0x91, Instr8SUB, LocRegA, LocRegB, 1);
-            SetOp(0x92, Instr8SUB, LocRegA, LocRegB, 1);
-            SetOp(0x93, Instr8SUB, LocRegA, LocRegB, 1);
-            SetOp(0x94, Instr8SUB, LocRegA, LocRegB, 1);
-            SetOp(0x95, Instr8SUB, LocRegA, LocRegB, 1);
+            SetOp(0x91, Instr8SUB, LocRegA, LocRegC, 1);
+            SetOp(0x92, Instr8SUB, LocRegA, LocRegD, 1);
+            SetOp(0x93, Instr8SUB, LocRegA, LocRegE, 1);
+            SetOp(0x94, Instr8SUB, LocRegA, LocRegH, 1);
+            SetOp(0x95, Instr8SUB, LocRegA, LocRegL, 1);
 
             SetOp(0xD6, Instr8SUB, LocRegA, Loc8Immediate, 2);
 
@@ -410,11 +410,11 @@ namespace coleco_o_tron
 
             SetOp(0x9F, Instr8SBC, LocRegA, LocRegA, 1);
             SetOp(0x98, Instr8SBC, LocRegA, LocRegB, 1);
-            SetOp(0x99, Instr8SBC, LocRegA, LocRegB, 1);
-            SetOp(0x9A, Instr8SBC, LocRegA, LocRegB, 1);
-            SetOp(0x9B, Instr8SBC, LocRegA, LocRegB, 1);
-            SetOp(0x9C, Instr8SBC, LocRegA, LocRegB, 1);
-            SetOp(0x9D, Instr8SBC, LocRegA, LocRegB, 1);
+            SetOp(0x99, Instr8SBC, LocRegA, LocRegC, 1);
+            SetOp(0x9A, Instr8SBC, LocRegA, LocRegD, 1);
+            SetOp(0x9B, Instr8SBC, LocRegA, LocRegE, 1);
+            SetOp(0x9C, Instr8SBC, LocRegA, LocRegH, 1);
+            SetOp(0x9D, Instr8SBC, LocRegA, LocRegL, 1);
 
             SetOp(0xDE, Instr8SBC, LocRegA, Loc8Immediate, 2);
 
@@ -422,11 +422,11 @@ namespace coleco_o_tron
 
             SetOp(0xA7, InstrAND, LocRegA, LocRegA, 1);
             SetOp(0xA0, InstrAND, LocRegA, LocRegB, 1);
-            SetOp(0xA1, InstrAND, LocRegA, LocRegB, 1);
-            SetOp(0xA2, InstrAND, LocRegA, LocRegB, 1);
-            SetOp(0xA3, InstrAND, LocRegA, LocRegB, 1);
-            SetOp(0xA4, InstrAND, LocRegA, LocRegB, 1);
-            SetOp(0xA5, InstrAND, LocRegA, LocRegB, 1);
+            SetOp(0xA1, InstrAND, LocRegA, LocRegC, 1);
+            SetOp(0xA2, InstrAND, LocRegA, LocRegD, 1);
+            SetOp(0xA3, InstrAND, LocRegA, LocRegE, 1);
+            SetOp(0xA4, InstrAND, LocRegA, LocRegH, 1);
+            SetOp(0xA5, InstrAND, LocRegA, LocRegL, 1);
 
             SetOp(0xE6, InstrAND, LocRegA, Loc8Immediate, 2);
 
@@ -434,11 +434,11 @@ namespace coleco_o_tron
 
             SetOp(0xB7, InstrOR, LocRegA, LocRegA, 1);
             SetOp(0xB0, InstrOR, LocRegA, LocRegB, 1);
-            SetOp(0xB1, InstrOR, LocRegA, LocRegB, 1);
-            SetOp(0xB2, InstrOR, LocRegA, LocRegB, 1);
-            SetOp(0xB3, InstrOR, LocRegA, LocRegB, 1);
-            SetOp(0xB4, InstrOR, LocRegA, LocRegB, 1);
-            SetOp(0xB5, InstrOR, LocRegA, LocRegB, 1);
+            SetOp(0xB1, InstrOR, LocRegA, LocRegC, 1);
+            SetOp(0xB2, InstrOR, LocRegA, LocRegD, 1);
+            SetOp(0xB3, InstrOR, LocRegA, LocRegE, 1);
+            SetOp(0xB4, InstrOR, LocRegA, LocRegH, 1);
+            SetOp(0xB5, InstrOR, LocRegA, LocRegL, 1);
 
             SetOp(0xF6, InstrOR, LocRegA, Loc8Immediate, 2);
 
@@ -446,11 +446,11 @@ namespace coleco_o_tron
 
             SetOp(0xAF, InstrXOR, LocRegA, LocRegA, 1);
             SetOp(0xA8, InstrXOR, LocRegA, LocRegB, 1);
-            SetOp(0xA9, InstrXOR, LocRegA, LocRegB, 1);
-            SetOp(0xAA, InstrXOR, LocRegA, LocRegB, 1);
-            SetOp(0xAB, InstrXOR, LocRegA, LocRegB, 1);
-            SetOp(0xAC, InstrXOR, LocRegA, LocRegB, 1);
-            SetOp(0xAD, InstrXOR, LocRegA, LocRegB, 1);
+            SetOp(0xA9, InstrXOR, LocRegA, LocRegC, 1);
+            SetOp(0xAA, InstrXOR, LocRegA, LocRegD, 1);
+            SetOp(0xAB, InstrXOR, LocRegA, LocRegE, 1);
+            SetOp(0xAC, InstrXOR, LocRegA, LocRegH, 1);
+            SetOp(0xAD, InstrXOR, LocRegA, LocRegL, 1);
 
             SetOp(0xEE, InstrXOR, LocRegA, Loc8Immediate, 2);
 
@@ -458,11 +458,11 @@ namespace coleco_o_tron
 
             SetOp(0xBF, InstrCP, LocRegA, LocRegA, 1);
             SetOp(0xB8, InstrCP, LocRegA, LocRegB, 1);
-            SetOp(0xB9, InstrCP, LocRegA, LocRegB, 1);
-            SetOp(0xBA, InstrCP, LocRegA, LocRegB, 1);
-            SetOp(0xBB, InstrCP, LocRegA, LocRegB, 1);
-            SetOp(0xBC, InstrCP, LocRegA, LocRegB, 1);
-            SetOp(0xBD, InstrCP, LocRegA, LocRegB, 1);
+            SetOp(0xB9, InstrCP, LocRegA, LocRegC, 1);
+            SetOp(0xBA, InstrCP, LocRegA, LocRegD, 1);
+            SetOp(0xBB, InstrCP, LocRegA, LocRegE, 1);
+            SetOp(0xBC, InstrCP, LocRegA, LocRegH, 1);
+            SetOp(0xBD, InstrCP, LocRegA, LocRegL, 1);
 
             SetOp(0xFE, InstrCP, LocRegA, Loc8Immediate, 2);
 

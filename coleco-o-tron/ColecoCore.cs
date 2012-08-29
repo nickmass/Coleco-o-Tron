@@ -169,6 +169,9 @@ namespace coleco_o_tron
         bool emulationRunning = true;
         byte[] memory = new byte[0x10000];
         int counter;
+
+        PPU ppu = new PPU();
+
         public void Run()
         {
             var fs = File.OpenRead("coleco.rom");
@@ -180,7 +183,7 @@ namespace coleco_o_tron
             int[] edOpTable = OpInfo.GetEDOps();
             int op, opCode, source, destination, instruction, cycles, result = 0, data = 0, temp = 0;
 
-            long debugCount = 0;
+            long debugCount = 1000000;
 
             File.Delete("log.txt");
 
@@ -1033,11 +1036,9 @@ namespace coleco_o_tron
                     case OpInfo.PrefixDD:
                         prefix = Prefix.DD;
                         continue;
-                        break;
                     case OpInfo.PrefixFD:
                         prefix = Prefix.FD;
                         continue;
-                        break;
 
                 }
                 switch (destination)
@@ -1134,6 +1135,12 @@ namespace coleco_o_tron
                         regR = result;
                         break;
                 }
+                ppu.Clock(cycles);
+                if(ppu.nmi)
+                {
+                    PushWordStack(regPC);
+                    regPC = 0x0066;
+                }
                 counter += cycles;
                 prefix = Prefix.None;
             }
@@ -1191,10 +1198,17 @@ namespace coleco_o_tron
 
         private void Out(int value, int address)
         {
-            
+            if((address & 0xE0) == 0xA0)
+            {
+                ppu.Write((byte)value, address);
+            }
         }
         private byte In(int address)
         {
+            if ((address & 0xE0) == 0xA0)
+            {
+                return ppu.Read(address);
+            }
             return 0x00;
         }
         private static bool Parity8(int reg)
