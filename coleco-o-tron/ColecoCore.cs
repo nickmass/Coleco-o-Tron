@@ -20,21 +20,21 @@ namespace coleco_o_tron
             IM1,
             IM2
         }
-        private int regA;
-        private int regB;
-        private int regC;
-        private int regD;
-        private int regE;
-        private int regH;
-        private int regL;
-        private int regIXh;
-        private int regIXl;
-        private int regIYh;
-        private int regIYl;
-        private int regSP;
-        private int regPC;
+        private int regA = 0xFF;
+        private int regB = 0xFF;
+        private int regC = 0xFF;
+        private int regD = 0xFF;
+        private int regE = 0xFF;
+        private int regH = 0xFF;
+        private int regL = 0xFF;
+        private int regIXh = 0xFF;
+        private int regIXl = 0xFF;
+        private int regIYh = 0xFF;
+        private int regIYl = 0xFF;
+        public int regSP;
+        public int regPC;
         private int intZ = 1;
-        private bool flagZ
+        public bool flagZ
         {
             get
             {
@@ -48,11 +48,11 @@ namespace coleco_o_tron
                     intZ = 1;
             }
         }
-        private bool flagN;
-        private bool flagH;
-        private bool flagC;
-        private bool flagS;
-        private bool flagV;
+        public bool flagN;
+        public bool flagH;
+        public bool flagC;
+        public bool flagS;
+        public bool flagV;
         private int regF
         {
             get
@@ -82,7 +82,7 @@ namespace coleco_o_tron
                 flagC = ((value & 0x01) != 0);
             }
         }
-        private int regAF
+        public int regAF
         {
             get
             {
@@ -94,7 +94,7 @@ namespace coleco_o_tron
                 regF = (value & 0xFF);
             }
         }
-        private int regBC
+        public int regBC
         {
             get
             {
@@ -106,7 +106,7 @@ namespace coleco_o_tron
                 regC = (value & 0xFF);
             }
         }
-        private int regDE
+        public int regDE
         {
             get
             {
@@ -118,7 +118,7 @@ namespace coleco_o_tron
                 regE = (value & 0xFF);
             }
         }
-        private int regHL
+        public int regHL
         {
             get
             {
@@ -130,7 +130,7 @@ namespace coleco_o_tron
                 regL = (value & 0xFF);
             }
         }
-        private int regIX
+        public int regIX
         {
             get
             {
@@ -142,7 +142,7 @@ namespace coleco_o_tron
                 regIXl = (value & 0xFF);
             }
         }
-        private int regIY
+        public int regIY
         {
             get
             {
@@ -156,11 +156,11 @@ namespace coleco_o_tron
         }
         private int regI;
         private int regR;
-        private int shadowRegAF;
-        private int shadowRegBC;
-        private int shadowRegDE;
-        private int shadowRegHL;
-        private bool halted;
+        private int shadowRegAF = 0xFFD7;
+        private int shadowRegBC = 0xFFFF;
+        private int shadowRegDE = 0xFFFF;
+        private int shadowRegHL = 0xFFFF;
+        private int interruptDataByte;
         private bool IFF1;
         private bool IFF2;
         private InterruptMode IM;
@@ -170,41 +170,78 @@ namespace coleco_o_tron
         byte[] memory = new byte[0x10000];
         int counter;
 
-        PPU ppu = new PPU();
+        public PPU ppu = new PPU();
+        public Input input = new Input();
+        StringBuilder debugBuilder = new StringBuilder();
 
-        public void Run()
+        public Debug debug;
+
+        private int[] opTable;
+        private int[] edOpTable;
+        private long debugCount;
+        public ColecoCore(byte[] rom)
         {
+            debug = new Debug(this);
+            regF = 0xD7;
             var fs = File.OpenRead("coleco.rom");
             for (int i = 0; i < 0x10000 && fs.CanRead; i++)
                 memory[i] = (byte)fs.ReadByte();
-            memory[0x8000] = 0xFF;
-            memory[0x8001] = 0xFF;
-            int[] opTable = OpInfo.GetOps();
-            int[] edOpTable = OpInfo.GetEDOps();
+
+            for (int i = 0x00; i < rom.Length && i < 0x8000; i++)
+            {
+                memory[i + 0x8000] = rom[i];
+            }
+
+            opTable = OpInfo.GetOps();
+            edOpTable = OpInfo.GetEDOps();
+
+            debugCount = -1;
+            File.Delete("log.txt");
+            
+        }
+
+        private bool dbgEnabled = false;
+        public void Run()
+        {
             int op, opCode, source, destination, instruction, cycles, result = 0, data = 0, temp = 0;
 
-            long debugCount = 1000000;
-
-            File.Delete("log.txt");
-
-            while (emulationRunning)
+            emulationRunning = true;
+            while (emulationRunning && !debug.Interrupt)
             {
-                debugCount++;
+                if(prefix == Prefix.None)
+                    debug.Execute(regPC);
                 opCode = Read();
-                if (debugCount < 10000 && prefix == Prefix.None)
-                    File.AppendAllText("log.txt", string.Format("{0:x4} {1:x2} AF:{2:x4} BC:{3:x4} DE:{4:x4} HL:{5:x4} IX:{6:x4} IY:{7:x4}\r\n", regPC - 1, opCode, regAF, regBC, regDE, regHL, regIX, regIY));
+                if (debugCount < 100000 && prefix == Prefix.None && (dbgEnabled || regPC == 0x1979))
+                {
+                    dbgEnabled = true;
+                    debugCount++;
+                    debugBuilder.AppendFormat(
+                        "{0:x4} AF:{1:x4} BC:{2:x4} DE:{3:x4} HL:{4:x4} IX:{5:x4} IY:{6:x4}\r\n", regPC - 1, regAF, regBC, regDE, regHL, regIX, regIY);
+
+                    if (debugCount == 100000)
+                        File.AppendAllText("log.txt", debugBuilder.ToString());
+                }
                 op = opTable[opCode];
                 instruction = op & 0xFF;
                 destination = (op >> 8) & 0xFF;
                 source = (op >> 16) & 0xFF;
                 cycles = (op >> 24) & 0xFF;
 
-                data = GetSource(source);
+                if (prefix != Prefix.None) //TODO - Wrong Wrong Wrong
+                    cycles += 9;
+
+                data = GetSource(source, opCode);
 
                 switch (instruction)
                 {
                     case OpInfo.InstrLD:
                         result = data;
+                        break;
+                    case OpInfo.InstrLDInterrupt:
+                        result = data;
+                        flagS = (result & 0x80) == 0x80;
+                        intZ = result;
+                        flagV = IFF2;
                         break;
                     case OpInfo.InstrEXDEHL:
                         temp = regDE;
@@ -235,7 +272,7 @@ namespace coleco_o_tron
                         result = regA + data;
                         flagN = false;
                         flagC = result > 0xFF;
-                        flagV = result > 127;
+                        flagV = (((data ^ regA ^ 0x80) & (data ^ result)) & 0x80) != 0; 
                         flagH = ((regA & 0xF) + (data & 0xF)) > 0xF;
                         flagS = (result & 0x80) == 0x80;
                         result = intZ = result & 0xFF;
@@ -366,9 +403,15 @@ namespace coleco_o_tron
                         IFF2 = true;
                         break;
                     case OpInfo.InstrADD:
-                        result = (regHL + data);
+                        if (prefix == Prefix.DD)
+                            temp = regIX;
+                        else if (prefix == Prefix.FD)
+                            temp = regIY;
+                        else
+                            temp = regHL;
+                        result = (temp + data);
                         flagN = false;
-                        flagH = ((regHL ^ data ^ (result & 0xFFFF)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
+                        flagH = ((temp ^ data ^ (result & 0xFFFF)) & 0x1000) != 0; //I don't really get how the H flag works here, this is from VBA source.
                         flagC = result > 0xFFFF;
                         result = result & 0xFFFF;
                         break;
@@ -554,7 +597,7 @@ namespace coleco_o_tron
                         break;
                     case OpInfo.PrefixCB:
                         var bitOp = Read();
-                        cycles = 2; //TODO - WRONG WRONG WRONG
+                        cycles = 8; //TODO - WRONG WRONG WRONG
                         switch(bitOp & 0x7)
                         {
                             case 0:
@@ -577,14 +620,14 @@ namespace coleco_o_tron
                                 break;
                             case 6:
                                 source = OpInfo.LocAddrHL;
-                                cycles += 2;
+                                cycles += 7;
                                 break;
                             case 7:
                                 source = OpInfo.LocRegA;
                                 break;
                         }
                         destination = source;
-                        data = GetSource(source);
+                        data = GetSource(source, bitOp);
 
                         switch ((bitOp & 0xF8) >> 3)
                         {
@@ -669,7 +712,7 @@ namespace coleco_o_tron
                                 flagN = false;
                                 break;
                             case OpInfo.InstrSLA:
-                                result = data << 1;
+                                result = (data << 1) & 0xFF;
                                 flagS = (result & 0x80) == 0x80;
                                 flagC = (data & 0x80) == 0x80;
                                 intZ = result;
@@ -687,7 +730,7 @@ namespace coleco_o_tron
                                 flagN = false;
                                 break;
                             case OpInfo.InstrSLL:
-                                result = data << 1;
+                                result = (data << 1) & 0xFF;
                                 flagC = (data & 0x80) == 0x80;
                                 flagS = false;
                                 intZ = result;
@@ -807,7 +850,7 @@ namespace coleco_o_tron
                         source = (op >> 16) & 0xFF;
                         cycles = (op >> 24) & 0xFF;
 
-                        data = GetSource(source);
+                        data = GetSource(source, opCode);
 
                         switch (instruction)
                         {
@@ -824,7 +867,7 @@ namespace coleco_o_tron
                                 regB = (regB - 1) & 0xFF;
                                 regHL = (regHL + 1) & 0xFFFF;
                                 flagN = true;
-                                flagZ = (regB - 1) == 0;
+                                flagZ = regB == 0;
                                 break;
                             case OpInfo.InstrINIR:
                                 Write(In(regC), regHL);
@@ -859,7 +902,7 @@ namespace coleco_o_tron
                                 regB = (regB - 1) & 0xFF;
                                 regHL = (regHL + 1) & 0xFFFF;
                                 flagN = true;
-                                flagZ = (regB - 1) == 0;
+                                flagZ = regB == 0;
                                 break;
                             case OpInfo.InstrOUTIR:
                                 Out(data, regC);
@@ -1034,9 +1077,11 @@ namespace coleco_o_tron
 
                         break;
                     case OpInfo.PrefixDD:
+                        regR = (regR + 1) & 0xFF;
                         prefix = Prefix.DD;
                         continue;
                     case OpInfo.PrefixFD:
+                        regR = (regR + 1) & 0xFF;
                         prefix = Prefix.FD;
                         continue;
 
@@ -1064,17 +1109,17 @@ namespace coleco_o_tron
                         regF = result;
                         break;
                     case OpInfo.LocRegH:
-                        if (prefix == Prefix.DD)
+                        if (prefix == Prefix.DD && opCode != 0x66)
                             regIXh = result;
-                        else if (prefix == Prefix.FD)
+                        else if (prefix == Prefix.FD && opCode != 0x66)
                             regIYh = result;
                         else 
                             regH = result;
                         break;
                     case OpInfo.LocRegL:
-                        if (prefix == Prefix.DD)
+                        if (prefix == Prefix.DD && opCode != 0x6E)
                             regIXl = result;
-                        else if (prefix == Prefix.FD)
+                        else if (prefix == Prefix.FD && opCode != 0x6E)
                             regIYl = result;
                         else
                             regL = result;
@@ -1135,12 +1180,40 @@ namespace coleco_o_tron
                         regR = result;
                         break;
                 }
+                regR = (regR + 1) & 0xFF;
                 ppu.Clock(cycles);
+                if (ppu.frameComplete)
+                {
+                    emulationRunning = false;
+                    ppu.frameComplete = false;
+                }
                 if(ppu.nmi)
                 {
                     PushWordStack(regPC);
                     regPC = 0x0066;
                 }
+                if(IFF1 && false)
+                {
+                    switch(IM)
+                    {
+                        case InterruptMode.IM1:
+                            IFF1 = false;
+                            PushWordStack(regPC);
+                            regPC = 0x0038;
+                            break;
+                        case InterruptMode.IM2:
+                            IFF1 = false;
+                            PushWordStack(regPC);
+                            regPC = ReadWord((regI << 8) | (interruptDataByte & 0xFE));
+                        break;
+                    }
+                }
+
+                if (ppu.frame == 700)
+                    input.keys[1] = true;
+                debug.AddCycles(cycles);
+                if (ppu.frame == 705)
+                    input.keys[1] = false;
                 counter += cycles;
                 prefix = Prefix.None;
             }
@@ -1148,6 +1221,7 @@ namespace coleco_o_tron
 
         private byte Read(int address)
         {
+            debug.Read(address);
             return memory[address & 0xFFFF];
         }
         private byte Read()
@@ -1186,6 +1260,13 @@ namespace coleco_o_tron
         }
         private void Write(int value, int address)
         {
+            debug.Write(address);
+            /*
+            if (address == 0x73fe)
+                debugBuilder.AppendLine("WRITE: " + value.ToString("x2"));
+            if (address == 0x73ff)
+                debugBuilder.AppendLine("WRITE: " + value.ToString("x2"));
+            */
             if(address >= 0x2000 && address < 0x8000)
                 memory[address & 0xFFFF] = (byte)(value & 0xFF);
         }
@@ -1193,7 +1274,7 @@ namespace coleco_o_tron
         private void WriteWord(int value, int address)
         {
             Write(value, address);
-            Write(value >> 1, address + 1);
+            Write(value >> 8, address + 1);
         }
 
         private void Out(int value, int address)
@@ -1202,6 +1283,7 @@ namespace coleco_o_tron
             {
                 ppu.Write((byte)value, address);
             }
+            input.Write((byte)value, address);
         }
         private byte In(int address)
         {
@@ -1209,7 +1291,8 @@ namespace coleco_o_tron
             {
                 return ppu.Read(address);
             }
-            return 0x00;
+
+            return input.Read(address);
         }
         private static bool Parity8(int reg)
         {
@@ -1226,7 +1309,7 @@ namespace coleco_o_tron
             reg &= 0xF;
             return ((0x6996 >> reg) & 1) != 1;
         }
-        private int GetSource(int source)
+        private int GetSource(int source, int opcode)
         {
             switch (source)
             {
@@ -1245,15 +1328,15 @@ namespace coleco_o_tron
                 case OpInfo.LocRegF:
                     return regF;
                 case OpInfo.LocRegH:
-                    if (prefix == Prefix.DD)
+                    if (prefix == Prefix.DD && opcode != 0x74)
                         return regIXh;
-                    if (prefix == Prefix.FD)
+                    if (prefix == Prefix.FD && opcode != 0x74)
                         return regIYh;
                     return regH;
                 case OpInfo.LocRegL:
-                    if (prefix == Prefix.DD)
+                    if (prefix == Prefix.DD && opcode != 0x75)
                         return regIXl;
-                    if (prefix == Prefix.FD)
+                    if (prefix == Prefix.FD && opcode != 0x75)
                         return regIYl;
                     return regL;
                 case OpInfo.Loc8Immediate:

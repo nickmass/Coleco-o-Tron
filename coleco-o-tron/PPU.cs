@@ -24,7 +24,7 @@ namespace coleco_o_tron
 
         byte[] memory = new byte[0x4000];
         byte[] registers = new byte[8];
-        uint[] screen = new uint[(256 + 15 + 13) * (192 + 24 + 27)];
+        public uint[] screen = new uint[(256 + 15 + 13) * (192 + 24 + 27)];
 
 
         uint[] colorChart = new uint[16];
@@ -35,25 +35,29 @@ namespace coleco_o_tron
         private byte writeData;
         private ushort writeAddress;
         private ushort readAddress;
+        public bool frameComplete;
+        private bool fifthSpriteFlag;
+        private byte fifthSpriteNumber;
+        private bool coincidenceFlag;
 
         public PPU()
         {
-            colorChart[0] = (uint)Color.Black.ToArgb();
-            colorChart[1] = (uint)Color.Black.ToArgb();
-            colorChart[2] = (uint)Color.Green.ToArgb();
-            colorChart[3] = (uint)Color.LightGreen.ToArgb();
-            colorChart[4] = (uint)Color.DarkBlue.ToArgb();
-            colorChart[5] = (uint)Color.LightBlue.ToArgb();
-            colorChart[6] = (uint)Color.DarkRed.ToArgb();
-            colorChart[7] = (uint)Color.Cyan.ToArgb();
-            colorChart[8] = (uint)Color.Red.ToArgb();
-            colorChart[9] = (uint)Color.LightCoral.ToArgb();
-            colorChart[10] = (uint)Color.DarkGoldenrod.ToArgb();
-            colorChart[11] = (uint)Color.LightYellow.ToArgb();
-            colorChart[12] = (uint)Color.DarkGreen.ToArgb();
-            colorChart[13] = (uint)Color.Magenta.ToArgb();
-            colorChart[14] = (uint)Color.Gray.ToArgb();
-            colorChart[15] = (uint)Color.White.ToArgb();
+            colorChart[0] = 0xFF000000;
+            colorChart[1] = 0xFF000000;
+            colorChart[2] = 0xFF3FB849;
+            colorChart[3] = 0xFF75D07D;
+            colorChart[4] = 0xFF5A55E0;
+            colorChart[5] = 0xFF8076F1;
+            colorChart[6] = 0xFFB95E52;
+            colorChart[7] = 0xFF65DBEF;
+            colorChart[8] = 0xFFDB6559;
+            colorChart[9] = 0xFFFF897D;
+            colorChart[10] = 0xFFCCC35E;
+            colorChart[11] = 0xFFDED087;
+            colorChart[12] = 0xFF3BA242;
+            colorChart[13] = 0xFFB666B5;
+            colorChart[14] = 0xFFCCCCCC;
+            colorChart[15] = 0xFFFFFFFF;
         }
 
         private bool ev
@@ -110,7 +114,6 @@ namespace coleco_o_tron
         {
             get
             {
-                return 0x1400;
                 return (registers[2] & 0xF) * 0x400; }
         }
 
@@ -118,7 +121,6 @@ namespace coleco_o_tron
         {
             get
             {
-                return 0x1800;
                 return registers[3] * 0x40; }
         }
 
@@ -126,7 +128,6 @@ namespace coleco_o_tron
         {
             get
             {
-                return 0x1800;
                 return (registers[4] & 0x7) * 0x800; }
         }
 
@@ -144,12 +145,14 @@ namespace coleco_o_tron
         {
             get
             {
-                return 13; return registers[7] & 0xF; }
+                return registers[7] & 0xF; }
         }
 
         private int text1Color
         {
-            get { return registers[7] >> 4; }
+            get
+            {
+                return registers[7] >> 4; }
         }
 
         public byte Read(int address)
@@ -161,17 +164,30 @@ namespace coleco_o_tron
             byte data = 0;
             if (inVblank)
                 data |= 0x80;
+            if (coincidenceFlag)
+                data |= 0x40;
+            if (fifthSpriteFlag)
+            {
+                data |= 0x20;
+                data |= fifthSpriteNumber;
+            }
+            else
+            {
+                data |= 0x1f;
+            }
             nmi = false;
             inVblank = false;
             writeLatch = false;
-            return (byte)(data | 0x1f);
+            coincidenceFlag = false;
+            fifthSpriteFlag = false;
+            return data;
         }
 
         public void Write(byte value, int address)
         {
             if((address & 1) == 0)
             {
-                memory[writeAddress++] = value;
+                memory[writeAddress++ & 0x3FFF] = value;
                 return;
             }
             if(!writeLatch)
@@ -196,8 +212,24 @@ namespace coleco_o_tron
             writeLatch = !writeLatch;
         }
 
-        private int frame = 0;
-        public unsafe void Clock(int cycles)
+
+        private unsafe void DumpScreen(string fileName)
+        {
+            File.WriteAllBytes(fileName + ".bin", memory);
+            Bitmap imscreen = new Bitmap(284, 243, PixelFormat.Format32bppRgb);
+            var bmd = imscreen.LockBits(new Rectangle(0, 0, 284, 243), ImageLockMode.WriteOnly,
+                            PixelFormat.Format32bppRgb);
+            var ptr = (uint*)bmd.Scan0;
+            for (int i = 0; i < 284 * 243; i++)
+                ptr[i] = screen[i];
+            imscreen.UnlockBits(bmd);
+
+            imscreen.Save(fileName + ".png");
+            
+        }
+
+        public int frame = 0;
+        public void Clock(int cycles)
         {
             counter += cycles;
             if(counter > 342)
@@ -209,43 +241,112 @@ namespace coleco_o_tron
                 }
                 else if(scanline < 219)//MainScreen
                 {
+                    int borderLeft = 13;
+                    int borderRight = 15;
                     int screenScanline = scanline - 27;
                     switch(mode)
                     {
-                        case Mode.Graphics1:
-                            for (int pixel = 0; pixel < 13; pixel++)
-                                screen[(scanline * 284) + pixel] = colorChart[text0Color];
-
-                            int row = screenScanline / 8;
-                            int nameTable = baseNameTable | (row << 5);
-                            for (int tile = 0; tile < 32; tile++)
+                        case Mode.Text:
                             {
-                                int tileAddress = nameTable | tile;
-                                int tileNumber = memory[tileAddress];
-                                int tileRowAddress = basePatternGen | (tileNumber << 3) | (screenScanline % 8);
-                                int tileRow = memory[tileRowAddress];
-                                int colorAddress = baseColorTable | tileNumber >> 3;
-                                int tileColors = memory[colorAddress];
+                                borderLeft = 19;
+                                borderRight = 25;
 
-                                //tileRow = 0x55;
-
-                                uint color;
-                                for(int pixel = 0; pixel < 8; pixel++)
+                                int row = screenScanline >> 3;
+                                for (int tile = 0; tile < 40; tile++)
                                 {
-                                    if ((tileRow & 0x80) != 0)
-                                        color = colorChart[tileColors >> 4];
-                                    else
-                                        color = colorChart[tileColors & 0xF];
-                                    screen[(scanline * 284) + (tile * 8) + pixel + 13] = color;
-                                    tileRow <<= 1;
+                                    int tileNumber = memory[baseNameTable | ((40*row) + tile)];
+                                    int tileRowAddress = basePatternGen | (tileNumber << 3) | (screenScanline & 7);
+                                    int tileRow = memory[tileRowAddress];
+
+                                    uint color;
+                                    for (int pixel = 0; pixel < 6; pixel++)
+                                    {
+                                        if ((tileRow & 0x80) != 0)
+                                            color = colorChart[text1Color];
+                                        else
+                                            color = colorChart[text0Color];
+                                        screen[(scanline * 284) + (tile * 6) + pixel + borderLeft] = color;
+                                        tileRow <<= 1;
+                                    }
+
                                 }
-
                             }
-                            for (int pixel = 0; pixel < 15; pixel++)
-                                screen[(scanline * 284) + pixel + 256 + 13] = colorChart[text0Color];
+                            break;
+                        case Mode.Graphics1:
+                            {
+                                borderLeft = 13;
+                                borderRight = 15;
 
-                                break;
+                                int row = screenScanline >> 3;
+                                int nameTable = baseNameTable | (row << 5);
+                                for (int tile = 0; tile < 32; tile++)
+                                {
+                                    int tileAddress = nameTable | tile;
+                                    int tileNumber = memory[tileAddress];
+                                    int tileRowAddress = basePatternGen | (tileNumber << 3) | (screenScanline & 7);
+                                    int tileRow = memory[tileRowAddress];
+                                    int colorAddress = baseColorTable | tileNumber >> 3;
+                                    int tileColors = memory[colorAddress];
+
+                                    uint color;
+                                    for (int pixel = 0; pixel < 8; pixel++)
+                                    {
+                                        if ((tileRow & 0x80) != 0)
+                                            color = colorChart[tileColors >> 4];
+                                        else
+                                            color = colorChart[tileColors & 0xF];
+                                        screen[(scanline*284) + (tile*8) + pixel + borderLeft] = color;
+                                        tileRow <<= 1;
+                                    }
+
+                                }
+                            }
+                            break;
+                            case Mode.Graphics2:
+                            {
+                                borderLeft = 13;
+                                borderRight = 15;
+
+                                int row = screenScanline >> 3;
+                                int segment = (screenScanline << 5) & 0x1800;
+                                int nameTable = baseNameTable | (row << 5);
+                                for (int tile = 0; tile < 32; tile++)
+                                {
+                                    int tileAddress = nameTable | tile;
+                                    int tileNumber = memory[tileAddress];
+                                    int tileRowAddress = (basePatternGen & 0x2000) | segment | (tileNumber << 3) | (screenScanline & 7);
+                                    int tileRow = memory[tileRowAddress];
+                                    int colorAddress = (baseColorTable & 0x2000) | segment | (tileNumber << 3) | (screenScanline & 7);
+                                    int tileColors = memory[colorAddress];
+
+                                    uint color;
+                                    for (int pixel = 0; pixel < 8; pixel++)
+                                    {
+                                        if ((tileRow & 0x80) != 0)
+                                            color = colorChart[tileColors >> 4];
+                                        else
+                                            color = colorChart[tileColors & 0xF];
+                                        screen[(scanline * 284) + (tile * 8) + pixel + borderLeft] = color;
+                                        tileRow <<= 1;
+                                    }
+
+                                }
+                                
+                            }
+                            break;
+                            case Mode.MultiColor:
+                            {
+                                borderLeft = 13;
+                                borderRight = 15;
+                            }
+                            break;
                     }
+                    for (int pixel = 0; pixel < borderLeft; pixel++)
+                        screen[(scanline * 284) + pixel] = colorChart[text0Color];
+
+                    for (int pixel = 284 - borderRight; pixel < 284; pixel++)
+                        screen[(scanline * 284) + pixel] = colorChart[text0Color];
+
                 }
                 else if(scanline < 243)//BottomBorder
                 {
@@ -258,20 +359,9 @@ namespace coleco_o_tron
                 if (scanline == 219)
                 {
                     frame++;
-                    if (frame ==120)
-                    {
-                        File.WriteAllBytes("vramdump.bin", memory);
-                        Bitmap imscreen = new Bitmap(284,243, PixelFormat.Format32bppRgb);
-                        var bmd = imscreen.LockBits(new Rectangle(0, 0, 284, 243), ImageLockMode.WriteOnly,
-                                        PixelFormat.Format32bppRgb);
-                        var ptr = (uint*) bmd.Scan0;
-                        for (int i = 0; i < 284 * 243; i++)
-                            ptr[i] = screen[i];
-                        imscreen.UnlockBits(bmd);
-
-                        imscreen.Save("screen.png");
-
-                    }
+                    if(frame == 600)
+                        DumpScreen("mode2.png");
+                    frameComplete = true;
                     inVblank = true;
                     if (interruptEnabled)
                         nmi = true;

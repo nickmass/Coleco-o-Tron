@@ -91,6 +91,7 @@ namespace coleco_o_tron
         public const int InstrOUTD = 81;
         public const int InstrOUTDR = 82;
         public const int InstrSLL = 83;
+        public const int InstrLDInterrupt = 84;
 
         public const int PrefixED = 100;
         public const int PrefixCB = 101;
@@ -149,103 +150,103 @@ namespace coleco_o_tron
             for (int i = 0; i < 256; i++ )
                 SetEDOp(i, InstrNOP, LocNone, LocNone, 2);
 
-            SetEDOp(0x40, InstrIN, LocRegB, LocNone, 3);
-            SetEDOp(0x50, InstrIN, LocRegD, LocNone, 3);
-            SetEDOp(0x60, InstrIN, LocRegH, LocNone, 3);
-            SetEDOp(0x70, InstrIN, LocNone, LocNone, 3);
-            SetEDOp(0x48, InstrIN, LocRegC, LocNone, 3);
-            SetEDOp(0x58, InstrIN, LocRegE, LocNone, 3);
-            SetEDOp(0x68, InstrIN, LocRegL, LocNone, 3);
-            SetEDOp(0x78, InstrIN, LocRegA, LocNone, 3);
+            SetEDOp(0x40, InstrIN, LocRegB, LocNone, 12);
+            SetEDOp(0x50, InstrIN, LocRegD, LocNone, 12);
+            SetEDOp(0x60, InstrIN, LocRegH, LocNone, 12);
+            SetEDOp(0x70, InstrIN, LocNone, LocNone, 12);
+            SetEDOp(0x48, InstrIN, LocRegC, LocNone, 12);
+            SetEDOp(0x58, InstrIN, LocRegE, LocNone, 12);
+            SetEDOp(0x68, InstrIN, LocRegL, LocNone, 12);
+            SetEDOp(0x78, InstrIN, LocRegA, LocNone, 12);
 
 
-            SetEDOp(0x41, InstrOUT, LocNone, LocRegB, 3);
-            SetEDOp(0x51, InstrOUT, LocNone, LocRegD, 3);
-            SetEDOp(0x61, InstrOUT, LocNone, LocRegH, 3);
-            SetEDOp(0x71, InstrOUT, LocNone, LocNone, 3);
-            SetEDOp(0x49, InstrOUT, LocNone, LocRegC, 3);
-            SetEDOp(0x59, InstrOUT, LocNone, LocRegE, 3);
-            SetEDOp(0x69, InstrOUT, LocNone, LocRegL, 3);
-            SetEDOp(0x79, InstrOUT, LocNone, LocRegA, 3);
+            SetEDOp(0x41, InstrOUT, LocNone, LocRegB, 12);
+            SetEDOp(0x51, InstrOUT, LocNone, LocRegD, 12);
+            SetEDOp(0x61, InstrOUT, LocNone, LocRegH, 12);
+            SetEDOp(0x71, InstrOUT, LocNone, LocNone, 12);
+            SetEDOp(0x49, InstrOUT, LocNone, LocRegC, 12);
+            SetEDOp(0x59, InstrOUT, LocNone, LocRegE, 12);
+            SetEDOp(0x69, InstrOUT, LocNone, LocRegL, 12);
+            SetEDOp(0x79, InstrOUT, LocNone, LocRegA, 12);
 
-            SetEDOp(0x42, InstrSBC, LocRegHL, LocRegBC, 4);
-            SetEDOp(0x52, InstrSBC, LocRegHL, LocRegDE, 4);
-            SetEDOp(0x62, InstrSBC, LocRegHL, LocRegHL, 4);
-            SetEDOp(0x72, InstrSBC, LocRegHL, LocRegSP, 4);
+            SetEDOp(0x42, InstrSBC, LocRegHL, LocRegBC, 15);
+            SetEDOp(0x52, InstrSBC, LocRegHL, LocRegDE, 15);
+            SetEDOp(0x62, InstrSBC, LocRegHL, LocRegHL, 15);
+            SetEDOp(0x72, InstrSBC, LocRegHL, LocRegSP, 15);
 
-            SetEDOp(0x4A, InstrADC, LocRegHL, LocRegBC, 4);
-            SetEDOp(0x5A, InstrADC, LocRegHL, LocRegDE, 4);
-            SetEDOp(0x6A, InstrADC, LocRegHL, LocRegHL, 4);
-            SetEDOp(0x7A, InstrADC, LocRegHL, LocRegSP, 4);
+            SetEDOp(0x4A, InstrADC, LocRegHL, LocRegBC, 15);
+            SetEDOp(0x5A, InstrADC, LocRegHL, LocRegDE, 15);
+            SetEDOp(0x6A, InstrADC, LocRegHL, LocRegHL, 15);
+            SetEDOp(0x7A, InstrADC, LocRegHL, LocRegSP, 15);
 
-            SetEDOp(0x43, InstrLD, Loc16AddrAbsoulute, LocRegBC, 6);
-            SetEDOp(0x53, InstrLD, Loc16AddrAbsoulute, LocRegDE, 6);
-            SetEDOp(0x63, InstrLD, Loc16AddrAbsoulute, LocRegHL, 6);
-            SetEDOp(0x73, InstrLD, Loc16AddrAbsoulute, LocRegSP, 6);
+            SetEDOp(0x43, InstrLD, Loc16AddrAbsoulute, LocRegBC, 20);
+            SetEDOp(0x53, InstrLD, Loc16AddrAbsoulute, LocRegDE, 20);
+            SetEDOp(0x63, InstrLD, Loc16AddrAbsoulute, LocRegHL, 20);
+            SetEDOp(0x73, InstrLD, Loc16AddrAbsoulute, LocRegSP, 20);
 
-            SetEDOp(0x4B, InstrLD, LocRegBC, Loc16AddrAbsoulute, 6);
-            SetEDOp(0x5B, InstrLD, LocRegDE, Loc16AddrAbsoulute, 6);
-            SetEDOp(0x6B, InstrLD, LocRegHL, Loc16AddrAbsoulute, 6);
-            SetEDOp(0x7B, InstrLD, LocRegSP, Loc16AddrAbsoulute, 6);
+            SetEDOp(0x4B, InstrLD, LocRegBC, Loc16AddrAbsoulute, 20);
+            SetEDOp(0x5B, InstrLD, LocRegDE, Loc16AddrAbsoulute, 20);
+            SetEDOp(0x6B, InstrLD, LocRegHL, Loc16AddrAbsoulute, 20);
+            SetEDOp(0x7B, InstrLD, LocRegSP, Loc16AddrAbsoulute, 20);
 
-            SetEDOp(0x44, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x54, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x64, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x74, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x4C, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x5C, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x6C, InstrNEG, LocRegA, LocNone, 2);
-            SetEDOp(0x7C, InstrNEG, LocRegA, LocNone, 2);
+            SetEDOp(0x44, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x54, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x64, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x74, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x4C, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x5C, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x6C, InstrNEG, LocRegA, LocNone, 8);
+            SetEDOp(0x7C, InstrNEG, LocRegA, LocNone, 8);
 
-            SetEDOp(0x45, InstrRETN, LocNone, LocNone, 4);
-            SetEDOp(0x55, InstrRETN, LocNone, LocNone, 4);
-            SetEDOp(0x65, InstrRETN, LocNone, LocNone, 4);
-            SetEDOp(0x75, InstrRETN, LocNone, LocNone, 4);
-            SetEDOp(0x5D, InstrRETN, LocNone, LocNone, 4);
-            SetEDOp(0x6D, InstrRETN, LocNone, LocNone, 4);
-            SetEDOp(0x7D, InstrRETN, LocNone, LocNone, 4);
+            SetEDOp(0x45, InstrRETN, LocNone, LocNone, 14);
+            SetEDOp(0x55, InstrRETN, LocNone, LocNone, 14);
+            SetEDOp(0x65, InstrRETN, LocNone, LocNone, 14);
+            SetEDOp(0x75, InstrRETN, LocNone, LocNone, 14);
+            SetEDOp(0x5D, InstrRETN, LocNone, LocNone, 14);
+            SetEDOp(0x6D, InstrRETN, LocNone, LocNone, 14);
+            SetEDOp(0x7D, InstrRETN, LocNone, LocNone, 14);
 
-            SetEDOp(0x4D, InstrRETI, LocNone, LocNone, 4);
+            SetEDOp(0x4D, InstrRETI, LocNone, LocNone, 14);
 
-            SetEDOp(0x46, InstrIM0, LocNone, LocNone, 2);
-            SetEDOp(0x66, InstrIM0, LocNone, LocNone, 2);
-            SetEDOp(0x4E, InstrIM0, LocNone, LocNone, 2); //Should be illegal im0/1
-            SetEDOp(0x6E, InstrIM0, LocNone, LocNone, 2); //Should be illegal im0/1
+            SetEDOp(0x46, InstrIM0, LocNone, LocNone, 8);
+            SetEDOp(0x66, InstrIM0, LocNone, LocNone, 8);
+            SetEDOp(0x4E, InstrIM0, LocNone, LocNone, 8); //Should be illegal im0/1
+            SetEDOp(0x6E, InstrIM0, LocNone, LocNone, 8); //Should be illegal im0/1
 
-            SetEDOp(0x56, InstrIM1, LocNone, LocNone, 2);
-            SetEDOp(0x76, InstrIM1, LocNone, LocNone, 2);
+            SetEDOp(0x56, InstrIM1, LocNone, LocNone, 8);
+            SetEDOp(0x76, InstrIM1, LocNone, LocNone, 8);
 
-            SetEDOp(0x5E, InstrIM2, LocNone, LocNone, 2);
-            SetEDOp(0x7E, InstrIM2, LocNone, LocNone, 2);
+            SetEDOp(0x5E, InstrIM2, LocNone, LocNone, 8);
+            SetEDOp(0x7E, InstrIM2, LocNone, LocNone, 8);
 
-            SetEDOp(0x47, InstrLD, LocRegI, LocRegA, 2); //TODO - This group should set flags
-            SetEDOp(0x57, InstrLD, LocRegA, LocRegI, 2);
-            SetEDOp(0x4F, InstrLD, LocRegR, LocRegA, 2);
-            SetEDOp(0x5F, InstrLD, LocRegA, LocRegR, 2);
+            SetEDOp(0x47, InstrLD, LocRegI, LocRegA, 9); //TODO - This group should set flags
+            SetEDOp(0x57, InstrLDInterrupt, LocRegA, LocRegI, 9);
+            SetEDOp(0x4F, InstrLD, LocRegR, LocRegA, 9);
+            SetEDOp(0x5F, InstrLDInterrupt, LocRegA, LocRegR, 9);
 
-            SetEDOp(0x67, InstrRRD, LocAddrHL, LocAddrHL, 5);
+            SetEDOp(0x67, InstrRRD, LocAddrHL, LocAddrHL, 18);
 
-            SetEDOp(0x6F, InstrRLD, LocAddrHL, LocAddrHL, 5);
+            SetEDOp(0x6F, InstrRLD, LocAddrHL, LocAddrHL, 18);
 
-            SetEDOp(0xA0, InstrLDI, LocNone, LocNone, 4);
-            SetEDOp(0xB0, InstrLDIR, LocNone, LocNone, 4);
-            SetEDOp(0xA8, InstrLDD, LocNone, LocNone, 4);
-            SetEDOp(0xB8, InstrLDDR, LocNone, LocNone, 4);
+            SetEDOp(0xA0, InstrLDI, LocNone, LocNone, 16);
+            SetEDOp(0xB0, InstrLDIR, LocNone, LocNone, 16);
+            SetEDOp(0xA8, InstrLDD, LocNone, LocNone, 16);
+            SetEDOp(0xB8, InstrLDDR, LocNone, LocNone, 16);
 
-            SetEDOp(0xA1, InstrCPI, LocNone, LocNone, 4);
-            SetEDOp(0xB1, InstrCPIR, LocNone, LocNone, 4);
-            SetEDOp(0xA9, InstrCPD, LocNone, LocNone, 4);
-            SetEDOp(0xB9, InstrCPDR, LocNone, LocNone, 4);
+            SetEDOp(0xA1, InstrCPI, LocNone, LocNone, 16);
+            SetEDOp(0xB1, InstrCPIR, LocNone, LocNone, 16);
+            SetEDOp(0xA9, InstrCPD, LocNone, LocNone, 16);
+            SetEDOp(0xB9, InstrCPDR, LocNone, LocNone, 16);
 
-            SetEDOp(0xA2, InstrINI, LocNone, LocNone, 4);
-            SetEDOp(0xB2, InstrINIR, LocNone, LocNone, 4);
-            SetEDOp(0xAA, InstrIND, LocNone, LocNone, 4);
-            SetEDOp(0xBA, InstrINDR, LocNone, LocNone, 4);
+            SetEDOp(0xA2, InstrINI, LocNone, LocNone, 16);
+            SetEDOp(0xB2, InstrINIR, LocNone, LocNone, 16);
+            SetEDOp(0xAA, InstrIND, LocNone, LocNone, 16);
+            SetEDOp(0xBA, InstrINDR, LocNone, LocNone, 16);
 
-            SetEDOp(0xA3, InstrOUTI, LocNone, LocAddrHL, 4);
-            SetEDOp(0xB3, InstrOUTIR, LocNone, LocAddrHL, 4);
-            SetEDOp(0xAB, InstrOUTD, LocNone, LocAddrHL, 4);
-            SetEDOp(0xBB, InstrOUTDR, LocNone, LocAddrHL, 4);
+            SetEDOp(0xA3, InstrOUTI, LocNone, LocAddrHL, 16);
+            SetEDOp(0xB3, InstrOUTIR, LocNone, LocAddrHL, 16);
+            SetEDOp(0xAB, InstrOUTD, LocNone, LocAddrHL, 16);
+            SetEDOp(0xBB, InstrOUTDR, LocNone, LocAddrHL, 16);
 
         }
 
@@ -258,334 +259,334 @@ namespace coleco_o_tron
             SetOp(0xDD, PrefixDD, LocNone, LocNone, 0);
             SetOp(0xFD, PrefixFD, LocNone, LocNone, 0);
 
-            SetOp(0x7F, InstrLD, LocRegA, LocRegA, 1);
-            SetOp(0x78, InstrLD, LocRegA, LocRegB, 1);
-            SetOp(0x79, InstrLD, LocRegA, LocRegC, 1);
-            SetOp(0x7A, InstrLD, LocRegA, LocRegD, 1);
-            SetOp(0x7B, InstrLD, LocRegA, LocRegE, 1);
-            SetOp(0x7C, InstrLD, LocRegA, LocRegH, 1);
-            SetOp(0x7D, InstrLD, LocRegA, LocRegL, 1);
-            SetOp(0x47, InstrLD, LocRegB, LocRegA, 1);
-            SetOp(0x40, InstrLD, LocRegB, LocRegB, 1);
-            SetOp(0x41, InstrLD, LocRegB, LocRegC, 1);
-            SetOp(0x42, InstrLD, LocRegB, LocRegD, 1);
-            SetOp(0x43, InstrLD, LocRegB, LocRegE, 1);
-            SetOp(0x44, InstrLD, LocRegB, LocRegH, 1);
-            SetOp(0x45, InstrLD, LocRegB, LocRegL, 1);
-            SetOp(0x4F, InstrLD, LocRegC, LocRegA, 1);
-            SetOp(0x48, InstrLD, LocRegC, LocRegB, 1);
-            SetOp(0x49, InstrLD, LocRegC, LocRegC, 1);
-            SetOp(0x4A, InstrLD, LocRegC, LocRegD, 1);
-            SetOp(0x4B, InstrLD, LocRegC, LocRegE, 1);
-            SetOp(0x4C, InstrLD, LocRegC, LocRegH, 1);
-            SetOp(0x4D, InstrLD, LocRegC, LocRegL, 1);
-            SetOp(0x57, InstrLD, LocRegD, LocRegA, 1);
-            SetOp(0x50, InstrLD, LocRegD, LocRegB, 1);
-            SetOp(0x51, InstrLD, LocRegD, LocRegC, 1);
-            SetOp(0x52, InstrLD, LocRegD, LocRegD, 1);
-            SetOp(0x53, InstrLD, LocRegD, LocRegE, 1);
-            SetOp(0x54, InstrLD, LocRegD, LocRegH, 1);
-            SetOp(0x55, InstrLD, LocRegD, LocRegL, 1);
-            SetOp(0x5F, InstrLD, LocRegE, LocRegA, 1);
-            SetOp(0x58, InstrLD, LocRegE, LocRegB, 1);
-            SetOp(0x59, InstrLD, LocRegE, LocRegC, 1);
-            SetOp(0x5A, InstrLD, LocRegE, LocRegD, 1);
-            SetOp(0x5B, InstrLD, LocRegE, LocRegE, 1);
-            SetOp(0x5C, InstrLD, LocRegE, LocRegH, 1);
-            SetOp(0x5D, InstrLD, LocRegE, LocRegL, 1);
-            SetOp(0x67, InstrLD, LocRegH, LocRegA, 1);
-            SetOp(0x60, InstrLD, LocRegH, LocRegB, 1);
-            SetOp(0x61, InstrLD, LocRegH, LocRegC, 1);
-            SetOp(0x62, InstrLD, LocRegH, LocRegD, 1);
-            SetOp(0x63, InstrLD, LocRegH, LocRegE, 1);
-            SetOp(0x64, InstrLD, LocRegH, LocRegH, 1);
-            SetOp(0x65, InstrLD, LocRegH, LocRegL, 1);
-            SetOp(0x6F, InstrLD, LocRegL, LocRegA, 1);
-            SetOp(0x68, InstrLD, LocRegL, LocRegB, 1);
-            SetOp(0x69, InstrLD, LocRegL, LocRegC, 1);
-            SetOp(0x6A, InstrLD, LocRegL, LocRegD, 1);
-            SetOp(0x6B, InstrLD, LocRegL, LocRegE, 1);
-            SetOp(0x6C, InstrLD, LocRegL, LocRegH, 1);
-            SetOp(0x6D, InstrLD, LocRegL, LocRegL, 1);
-
-            SetOp(0x3E, InstrLD, LocRegA, Loc8Immediate, 2);
-            SetOp(0x06, InstrLD, LocRegB, Loc8Immediate, 2);
-            SetOp(0x0E, InstrLD, LocRegC, Loc8Immediate, 2);
-            SetOp(0x16, InstrLD, LocRegD, Loc8Immediate, 2);
-            SetOp(0x1E, InstrLD, LocRegE, Loc8Immediate, 2);
-            SetOp(0x26, InstrLD, LocRegH, Loc8Immediate, 2);
-            SetOp(0x2E, InstrLD, LocRegL, Loc8Immediate, 2);
-
-            SetOp(0x7E, InstrLD, LocRegA, LocAddrHL, 2);
-            SetOp(0x46, InstrLD, LocRegB, LocAddrHL, 2);
-            SetOp(0x4E, InstrLD, LocRegC, LocAddrHL, 2);
-            SetOp(0x56, InstrLD, LocRegD, LocAddrHL, 2);
-            SetOp(0x5E, InstrLD, LocRegE, LocAddrHL, 2);
-            SetOp(0x66, InstrLD, LocRegH, LocAddrHL, 2);
-            SetOp(0x6E, InstrLD, LocRegL, LocAddrHL, 2);
-
-            SetOp(0x77, InstrLD, LocAddrHL, LocRegA, 2);
-            SetOp(0x70, InstrLD, LocAddrHL, LocRegB, 2);
-            SetOp(0x71, InstrLD, LocAddrHL, LocRegC, 2);
-            SetOp(0x72, InstrLD, LocAddrHL, LocRegD, 2);
-            SetOp(0x73, InstrLD, LocAddrHL, LocRegE, 2);
-            SetOp(0x74, InstrLD, LocAddrHL, LocRegH, 2);
-            SetOp(0x75, InstrLD, LocAddrHL, LocRegL, 2);
-
-            SetOp(0x36, InstrLD, LocAddrHL, Loc8Immediate, 3);
-
-            SetOp(0x0A, InstrLD, LocRegA, LocAddrBC, 2);
-            SetOp(0x1A, InstrLD, LocRegA, LocAddrDE, 2);
-
-            SetOp(0x3A, InstrLD, LocRegA, LocAddrAbsoulute, 4);
-
-            SetOp(0x02, InstrLD, LocAddrBC, LocRegA, 2);
-            SetOp(0x12, InstrLD, LocAddrDE, LocRegA, 2);
-
-            SetOp(0x32, InstrLD, LocAddrAbsoulute, LocRegA, 4);
-
-            SetOp(0x01, InstrLD, LocRegBC, Loc16Immediate, 2);
-            SetOp(0x11, InstrLD, LocRegDE, Loc16Immediate, 2);
-            SetOp(0x21, InstrLD, LocRegHL, Loc16Immediate, 2);
-            SetOp(0x31, InstrLD, LocRegSP, Loc16Immediate, 2);
-
-            SetOp(0x2A, InstrLD, LocRegHL, Loc16AddrAbsoulute, 5);
-
-            SetOp(0x22, InstrLD, Loc16AddrAbsoulute, LocRegHL, 5);
-
-            SetOp(0xF9, InstrLD, LocRegSP, LocRegHL, 1);
-
-            SetOp(0xC5, InstrLD, Loc16Stack, LocRegBC, 3);
-            SetOp(0xD5, InstrLD, Loc16Stack, LocRegDE, 3);
-            SetOp(0xE5, InstrLD, Loc16Stack, LocRegHL, 3);
-            SetOp(0xF5, InstrLD, Loc16Stack, LocRegAF, 3);
+            SetOp(0x7F, InstrLD, LocRegA, LocRegA, 4);
+            SetOp(0x78, InstrLD, LocRegA, LocRegB, 4);
+            SetOp(0x79, InstrLD, LocRegA, LocRegC, 4);
+            SetOp(0x7A, InstrLD, LocRegA, LocRegD, 4);
+            SetOp(0x7B, InstrLD, LocRegA, LocRegE, 4);
+            SetOp(0x7C, InstrLD, LocRegA, LocRegH, 4);
+            SetOp(0x7D, InstrLD, LocRegA, LocRegL, 4);
+            SetOp(0x47, InstrLD, LocRegB, LocRegA, 4);
+            SetOp(0x40, InstrLD, LocRegB, LocRegB, 4);
+            SetOp(0x41, InstrLD, LocRegB, LocRegC, 4);
+            SetOp(0x42, InstrLD, LocRegB, LocRegD, 4);
+            SetOp(0x43, InstrLD, LocRegB, LocRegE, 4);
+            SetOp(0x44, InstrLD, LocRegB, LocRegH, 4);
+            SetOp(0x45, InstrLD, LocRegB, LocRegL, 4);
+            SetOp(0x4F, InstrLD, LocRegC, LocRegA, 4);
+            SetOp(0x48, InstrLD, LocRegC, LocRegB, 4);
+            SetOp(0x49, InstrLD, LocRegC, LocRegC, 4);
+            SetOp(0x4A, InstrLD, LocRegC, LocRegD, 4);
+            SetOp(0x4B, InstrLD, LocRegC, LocRegE, 4);
+            SetOp(0x4C, InstrLD, LocRegC, LocRegH, 4);
+            SetOp(0x4D, InstrLD, LocRegC, LocRegL, 4);
+            SetOp(0x57, InstrLD, LocRegD, LocRegA, 4);
+            SetOp(0x50, InstrLD, LocRegD, LocRegB, 4);
+            SetOp(0x51, InstrLD, LocRegD, LocRegC, 4);
+            SetOp(0x52, InstrLD, LocRegD, LocRegD, 4);
+            SetOp(0x53, InstrLD, LocRegD, LocRegE, 4);
+            SetOp(0x54, InstrLD, LocRegD, LocRegH, 4);
+            SetOp(0x55, InstrLD, LocRegD, LocRegL, 4);
+            SetOp(0x5F, InstrLD, LocRegE, LocRegA, 4);
+            SetOp(0x58, InstrLD, LocRegE, LocRegB, 4);
+            SetOp(0x59, InstrLD, LocRegE, LocRegC, 4);
+            SetOp(0x5A, InstrLD, LocRegE, LocRegD, 4);
+            SetOp(0x5B, InstrLD, LocRegE, LocRegE, 4);
+            SetOp(0x5C, InstrLD, LocRegE, LocRegH, 4);
+            SetOp(0x5D, InstrLD, LocRegE, LocRegL, 4);
+            SetOp(0x67, InstrLD, LocRegH, LocRegA, 4);
+            SetOp(0x60, InstrLD, LocRegH, LocRegB, 4);
+            SetOp(0x61, InstrLD, LocRegH, LocRegC, 4);
+            SetOp(0x62, InstrLD, LocRegH, LocRegD, 4);
+            SetOp(0x63, InstrLD, LocRegH, LocRegE, 4);
+            SetOp(0x64, InstrLD, LocRegH, LocRegH, 4);
+            SetOp(0x65, InstrLD, LocRegH, LocRegL, 4);
+            SetOp(0x6F, InstrLD, LocRegL, LocRegA, 4);
+            SetOp(0x68, InstrLD, LocRegL, LocRegB, 4);
+            SetOp(0x69, InstrLD, LocRegL, LocRegC, 4);
+            SetOp(0x6A, InstrLD, LocRegL, LocRegD, 4);
+            SetOp(0x6B, InstrLD, LocRegL, LocRegE, 4);
+            SetOp(0x6C, InstrLD, LocRegL, LocRegH, 4);
+            SetOp(0x6D, InstrLD, LocRegL, LocRegL, 4);
+
+            SetOp(0x3E, InstrLD, LocRegA, Loc8Immediate, 7);
+            SetOp(0x06, InstrLD, LocRegB, Loc8Immediate, 7);
+            SetOp(0x0E, InstrLD, LocRegC, Loc8Immediate, 7);
+            SetOp(0x16, InstrLD, LocRegD, Loc8Immediate, 7);
+            SetOp(0x1E, InstrLD, LocRegE, Loc8Immediate, 7);
+            SetOp(0x26, InstrLD, LocRegH, Loc8Immediate, 7);
+            SetOp(0x2E, InstrLD, LocRegL, Loc8Immediate, 7);
+
+            SetOp(0x7E, InstrLD, LocRegA, LocAddrHL, 7);
+            SetOp(0x46, InstrLD, LocRegB, LocAddrHL, 7);
+            SetOp(0x4E, InstrLD, LocRegC, LocAddrHL, 7);
+            SetOp(0x56, InstrLD, LocRegD, LocAddrHL, 7);
+            SetOp(0x5E, InstrLD, LocRegE, LocAddrHL, 7);
+            SetOp(0x66, InstrLD, LocRegH, LocAddrHL, 7);
+            SetOp(0x6E, InstrLD, LocRegL, LocAddrHL, 7);
+
+            SetOp(0x77, InstrLD, LocAddrHL, LocRegA, 7);
+            SetOp(0x70, InstrLD, LocAddrHL, LocRegB, 7);
+            SetOp(0x71, InstrLD, LocAddrHL, LocRegC, 7);
+            SetOp(0x72, InstrLD, LocAddrHL, LocRegD, 7);
+            SetOp(0x73, InstrLD, LocAddrHL, LocRegE, 7);
+            SetOp(0x74, InstrLD, LocAddrHL, LocRegH, 7);
+            SetOp(0x75, InstrLD, LocAddrHL, LocRegL, 7);
+
+            SetOp(0x36, InstrLD, LocAddrHL, Loc8Immediate, 10);
+
+            SetOp(0x0A, InstrLD, LocRegA, LocAddrBC, 7);
+            SetOp(0x1A, InstrLD, LocRegA, LocAddrDE, 7);
+
+            SetOp(0x3A, InstrLD, LocRegA, LocAddrAbsoulute, 13);
+
+            SetOp(0x02, InstrLD, LocAddrBC, LocRegA, 7);
+            SetOp(0x12, InstrLD, LocAddrDE, LocRegA, 7);
+
+            SetOp(0x32, InstrLD, LocAddrAbsoulute, LocRegA, 13);
+
+            SetOp(0x01, InstrLD, LocRegBC, Loc16Immediate, 10);
+            SetOp(0x11, InstrLD, LocRegDE, Loc16Immediate, 10);
+            SetOp(0x21, InstrLD, LocRegHL, Loc16Immediate, 10);
+            SetOp(0x31, InstrLD, LocRegSP, Loc16Immediate, 10);
+
+            SetOp(0x2A, InstrLD, LocRegHL, Loc16AddrAbsoulute, 16);
+
+            SetOp(0x22, InstrLD, Loc16AddrAbsoulute, LocRegHL, 16);
+
+            SetOp(0xF9, InstrLD, LocRegSP, LocRegHL, 6);
+
+            SetOp(0xC5, InstrLD, Loc16Stack, LocRegBC, 11);
+            SetOp(0xD5, InstrLD, Loc16Stack, LocRegDE, 11);
+            SetOp(0xE5, InstrLD, Loc16Stack, LocRegHL, 11);
+            SetOp(0xF5, InstrLD, Loc16Stack, LocRegAF, 11);
 
-            SetOp(0xC1, InstrLD, LocRegBC, Loc16Stack, 3);
-            SetOp(0xD1, InstrLD, LocRegDE, Loc16Stack, 3);
-            SetOp(0xE1, InstrLD, LocRegHL, Loc16Stack, 3);
-            SetOp(0xF1, InstrLD, LocRegAF, Loc16Stack, 3);
+            SetOp(0xC1, InstrLD, LocRegBC, Loc16Stack, 11);
+            SetOp(0xD1, InstrLD, LocRegDE, Loc16Stack, 11);
+            SetOp(0xE1, InstrLD, LocRegHL, Loc16Stack, 11);
+            SetOp(0xF1, InstrLD, LocRegAF, Loc16Stack, 11);
 
 
-            SetOp(0xEB, InstrEXDEHL, LocNone, LocNone, 1);
-            SetOp(0x08, InstrEXAFAF, LocNone, LocNone, 1);
-            SetOp(0xD9, InstrEXX, LocNone, LocNone, 1);
+            SetOp(0xEB, InstrEXDEHL, LocNone, LocNone, 4);
+            SetOp(0x08, InstrEXAFAF, LocNone, LocNone, 4);
+            SetOp(0xD9, InstrEXX, LocNone, LocNone, 4);
 
-            SetOp(0xE3, InstrEXSP, LocRegHL, LocRegHL, 5);
+            SetOp(0xE3, InstrEXSP, LocRegHL, LocRegHL, 19);
 
-            SetOp(0x87, Instr8ADD, LocRegA, LocRegA, 1);
-            SetOp(0x80, Instr8ADD, LocRegA, LocRegB, 1);
-            SetOp(0x81, Instr8ADD, LocRegA, LocRegC, 1);
-            SetOp(0x82, Instr8ADD, LocRegA, LocRegD, 1);
-            SetOp(0x83, Instr8ADD, LocRegA, LocRegE, 1);
-            SetOp(0x84, Instr8ADD, LocRegA, LocRegH, 1);
-            SetOp(0x85, Instr8ADD, LocRegA, LocRegL, 1);
+            SetOp(0x87, Instr8ADD, LocRegA, LocRegA, 4);
+            SetOp(0x80, Instr8ADD, LocRegA, LocRegB, 4);
+            SetOp(0x81, Instr8ADD, LocRegA, LocRegC, 4);
+            SetOp(0x82, Instr8ADD, LocRegA, LocRegD, 4);
+            SetOp(0x83, Instr8ADD, LocRegA, LocRegE, 4);
+            SetOp(0x84, Instr8ADD, LocRegA, LocRegH, 4);
+            SetOp(0x85, Instr8ADD, LocRegA, LocRegL, 4);
 
-            SetOp(0xC6, Instr8ADD, LocRegA, Loc8Immediate, 2);
+            SetOp(0xC6, Instr8ADD, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0x86, Instr8ADD, LocRegA, LocAddrHL, 2);
-
-            SetOp(0x8F, Instr8ADC, LocRegA, LocRegA, 1);
-            SetOp(0x88, Instr8ADC, LocRegA, LocRegB, 1);
-            SetOp(0x89, Instr8ADC, LocRegA, LocRegC, 1);
-            SetOp(0x8A, Instr8ADC, LocRegA, LocRegD, 1);
-            SetOp(0x8B, Instr8ADC, LocRegA, LocRegE, 1);
-            SetOp(0x8C, Instr8ADC, LocRegA, LocRegH, 1);
-            SetOp(0x8D, Instr8ADC, LocRegA, LocRegL, 1);
+            SetOp(0x86, Instr8ADD, LocRegA, LocAddrHL, 7);
+
+            SetOp(0x8F, Instr8ADC, LocRegA, LocRegA, 4);
+            SetOp(0x88, Instr8ADC, LocRegA, LocRegB, 4);
+            SetOp(0x89, Instr8ADC, LocRegA, LocRegC, 4);
+            SetOp(0x8A, Instr8ADC, LocRegA, LocRegD, 4);
+            SetOp(0x8B, Instr8ADC, LocRegA, LocRegE, 4);
+            SetOp(0x8C, Instr8ADC, LocRegA, LocRegH, 4);
+            SetOp(0x8D, Instr8ADC, LocRegA, LocRegL, 4);
 
-            SetOp(0xCE, Instr8ADC, LocRegA, Loc8Immediate, 2);
+            SetOp(0xCE, Instr8ADC, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0x8E, Instr8ADC, LocRegA, LocAddrHL, 2);
+            SetOp(0x8E, Instr8ADC, LocRegA, LocAddrHL, 7);
 
-            SetOp(0x97, Instr8SUB, LocRegA, LocRegA, 1);
-            SetOp(0x90, Instr8SUB, LocRegA, LocRegB, 1);
-            SetOp(0x91, Instr8SUB, LocRegA, LocRegC, 1);
-            SetOp(0x92, Instr8SUB, LocRegA, LocRegD, 1);
-            SetOp(0x93, Instr8SUB, LocRegA, LocRegE, 1);
-            SetOp(0x94, Instr8SUB, LocRegA, LocRegH, 1);
-            SetOp(0x95, Instr8SUB, LocRegA, LocRegL, 1);
+            SetOp(0x97, Instr8SUB, LocRegA, LocRegA, 4);
+            SetOp(0x90, Instr8SUB, LocRegA, LocRegB, 4);
+            SetOp(0x91, Instr8SUB, LocRegA, LocRegC, 4);
+            SetOp(0x92, Instr8SUB, LocRegA, LocRegD, 4);
+            SetOp(0x93, Instr8SUB, LocRegA, LocRegE, 4);
+            SetOp(0x94, Instr8SUB, LocRegA, LocRegH, 4);
+            SetOp(0x95, Instr8SUB, LocRegA, LocRegL, 4);
 
-            SetOp(0xD6, Instr8SUB, LocRegA, Loc8Immediate, 2);
+            SetOp(0xD6, Instr8SUB, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0x96, Instr8SUB, LocRegA, LocAddrHL, 2);
+            SetOp(0x96, Instr8SUB, LocRegA, LocAddrHL, 7);
 
-            SetOp(0x9F, Instr8SBC, LocRegA, LocRegA, 1);
-            SetOp(0x98, Instr8SBC, LocRegA, LocRegB, 1);
-            SetOp(0x99, Instr8SBC, LocRegA, LocRegC, 1);
-            SetOp(0x9A, Instr8SBC, LocRegA, LocRegD, 1);
-            SetOp(0x9B, Instr8SBC, LocRegA, LocRegE, 1);
-            SetOp(0x9C, Instr8SBC, LocRegA, LocRegH, 1);
-            SetOp(0x9D, Instr8SBC, LocRegA, LocRegL, 1);
+            SetOp(0x9F, Instr8SBC, LocRegA, LocRegA, 4);
+            SetOp(0x98, Instr8SBC, LocRegA, LocRegB, 4);
+            SetOp(0x99, Instr8SBC, LocRegA, LocRegC, 4);
+            SetOp(0x9A, Instr8SBC, LocRegA, LocRegD, 4);
+            SetOp(0x9B, Instr8SBC, LocRegA, LocRegE, 4);
+            SetOp(0x9C, Instr8SBC, LocRegA, LocRegH, 4);
+            SetOp(0x9D, Instr8SBC, LocRegA, LocRegL, 4);
 
-            SetOp(0xDE, Instr8SBC, LocRegA, Loc8Immediate, 2);
+            SetOp(0xDE, Instr8SBC, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0x9E, Instr8SBC, LocRegA, LocAddrHL, 2);
+            SetOp(0x9E, Instr8SBC, LocRegA, LocAddrHL, 7);
 
-            SetOp(0xA7, InstrAND, LocRegA, LocRegA, 1);
-            SetOp(0xA0, InstrAND, LocRegA, LocRegB, 1);
-            SetOp(0xA1, InstrAND, LocRegA, LocRegC, 1);
-            SetOp(0xA2, InstrAND, LocRegA, LocRegD, 1);
-            SetOp(0xA3, InstrAND, LocRegA, LocRegE, 1);
-            SetOp(0xA4, InstrAND, LocRegA, LocRegH, 1);
-            SetOp(0xA5, InstrAND, LocRegA, LocRegL, 1);
+            SetOp(0xA7, InstrAND, LocRegA, LocRegA, 4);
+            SetOp(0xA0, InstrAND, LocRegA, LocRegB, 4);
+            SetOp(0xA1, InstrAND, LocRegA, LocRegC, 4);
+            SetOp(0xA2, InstrAND, LocRegA, LocRegD, 4);
+            SetOp(0xA3, InstrAND, LocRegA, LocRegE, 4);
+            SetOp(0xA4, InstrAND, LocRegA, LocRegH, 4);
+            SetOp(0xA5, InstrAND, LocRegA, LocRegL, 4);
 
-            SetOp(0xE6, InstrAND, LocRegA, Loc8Immediate, 2);
+            SetOp(0xE6, InstrAND, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0xA6, InstrAND, LocRegA, LocAddrHL, 2);
+            SetOp(0xA6, InstrAND, LocRegA, LocAddrHL, 7);
 
-            SetOp(0xB7, InstrOR, LocRegA, LocRegA, 1);
-            SetOp(0xB0, InstrOR, LocRegA, LocRegB, 1);
-            SetOp(0xB1, InstrOR, LocRegA, LocRegC, 1);
-            SetOp(0xB2, InstrOR, LocRegA, LocRegD, 1);
-            SetOp(0xB3, InstrOR, LocRegA, LocRegE, 1);
-            SetOp(0xB4, InstrOR, LocRegA, LocRegH, 1);
-            SetOp(0xB5, InstrOR, LocRegA, LocRegL, 1);
+            SetOp(0xB7, InstrOR, LocRegA, LocRegA, 4);
+            SetOp(0xB0, InstrOR, LocRegA, LocRegB, 4);
+            SetOp(0xB1, InstrOR, LocRegA, LocRegC, 4);
+            SetOp(0xB2, InstrOR, LocRegA, LocRegD, 4);
+            SetOp(0xB3, InstrOR, LocRegA, LocRegE, 4);
+            SetOp(0xB4, InstrOR, LocRegA, LocRegH, 4);
+            SetOp(0xB5, InstrOR, LocRegA, LocRegL, 4);
 
-            SetOp(0xF6, InstrOR, LocRegA, Loc8Immediate, 2);
+            SetOp(0xF6, InstrOR, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0xB6, InstrOR, LocRegA, LocAddrHL, 2);
+            SetOp(0xB6, InstrOR, LocRegA, LocAddrHL, 7);
 
-            SetOp(0xAF, InstrXOR, LocRegA, LocRegA, 1);
-            SetOp(0xA8, InstrXOR, LocRegA, LocRegB, 1);
-            SetOp(0xA9, InstrXOR, LocRegA, LocRegC, 1);
-            SetOp(0xAA, InstrXOR, LocRegA, LocRegD, 1);
-            SetOp(0xAB, InstrXOR, LocRegA, LocRegE, 1);
-            SetOp(0xAC, InstrXOR, LocRegA, LocRegH, 1);
-            SetOp(0xAD, InstrXOR, LocRegA, LocRegL, 1);
+            SetOp(0xAF, InstrXOR, LocRegA, LocRegA, 4);
+            SetOp(0xA8, InstrXOR, LocRegA, LocRegB, 4);
+            SetOp(0xA9, InstrXOR, LocRegA, LocRegC, 4);
+            SetOp(0xAA, InstrXOR, LocRegA, LocRegD, 4);
+            SetOp(0xAB, InstrXOR, LocRegA, LocRegE, 4);
+            SetOp(0xAC, InstrXOR, LocRegA, LocRegH, 4);
+            SetOp(0xAD, InstrXOR, LocRegA, LocRegL, 4);
 
-            SetOp(0xEE, InstrXOR, LocRegA, Loc8Immediate, 2);
+            SetOp(0xEE, InstrXOR, LocRegA, Loc8Immediate, 7);
 
-            SetOp(0xAE, InstrXOR, LocRegA, LocAddrHL, 2);
+            SetOp(0xAE, InstrXOR, LocRegA, LocAddrHL, 7);
 
-            SetOp(0xBF, InstrCP, LocRegA, LocRegA, 1);
-            SetOp(0xB8, InstrCP, LocRegA, LocRegB, 1);
-            SetOp(0xB9, InstrCP, LocRegA, LocRegC, 1);
-            SetOp(0xBA, InstrCP, LocRegA, LocRegD, 1);
-            SetOp(0xBB, InstrCP, LocRegA, LocRegE, 1);
-            SetOp(0xBC, InstrCP, LocRegA, LocRegH, 1);
-            SetOp(0xBD, InstrCP, LocRegA, LocRegL, 1);
+            SetOp(0xBF, InstrCP, LocNone, LocRegA, 4);
+            SetOp(0xB8, InstrCP, LocNone, LocRegB, 4);
+            SetOp(0xB9, InstrCP, LocNone, LocRegC, 4);
+            SetOp(0xBA, InstrCP, LocNone, LocRegD, 4);
+            SetOp(0xBB, InstrCP, LocNone, LocRegE, 4);
+            SetOp(0xBC, InstrCP, LocNone, LocRegH, 4);
+            SetOp(0xBD, InstrCP, LocNone, LocRegL, 4);
 
-            SetOp(0xFE, InstrCP, LocRegA, Loc8Immediate, 2);
+            SetOp(0xFE, InstrCP, LocNone, Loc8Immediate, 7);
 
-            SetOp(0xBE, InstrCP, LocRegA, LocAddrHL, 2);
+            SetOp(0xBE, InstrCP, LocNone, LocAddrHL, 7);
 
-            SetOp(0x3C, Instr8INC, LocRegA, LocRegA, 1);
-            SetOp(0x04, Instr8INC, LocRegB, LocRegB, 1);
-            SetOp(0x0C, Instr8INC, LocRegC, LocRegC, 1);
-            SetOp(0x14, Instr8INC, LocRegD, LocRegD, 1);
-            SetOp(0x1C, Instr8INC, LocRegE, LocRegE, 1);
-            SetOp(0x24, Instr8INC, LocRegH, LocRegH, 1);
-            SetOp(0x2C, Instr8INC, LocRegL, LocRegL, 1);
+            SetOp(0x3C, Instr8INC, LocRegA, LocRegA, 4);
+            SetOp(0x04, Instr8INC, LocRegB, LocRegB, 4);
+            SetOp(0x0C, Instr8INC, LocRegC, LocRegC, 4);
+            SetOp(0x14, Instr8INC, LocRegD, LocRegD, 4);
+            SetOp(0x1C, Instr8INC, LocRegE, LocRegE, 4);
+            SetOp(0x24, Instr8INC, LocRegH, LocRegH, 4);
+            SetOp(0x2C, Instr8INC, LocRegL, LocRegL, 4);
 
-            SetOp(0x34, Instr8INC, LocAddrHL, LocAddrHL, 3);
+            SetOp(0x34, Instr8INC, LocAddrHL, LocAddrHL, 11);
 
-            SetOp(0x3D, Instr8DEC, LocRegA, LocRegA, 1);
-            SetOp(0x05, Instr8DEC, LocRegB, LocRegB, 1);
-            SetOp(0x0D, Instr8DEC, LocRegC, LocRegC, 1);
-            SetOp(0x15, Instr8DEC, LocRegD, LocRegD, 1);
-            SetOp(0x1D, Instr8DEC, LocRegE, LocRegE, 1);
-            SetOp(0x25, Instr8DEC, LocRegH, LocRegH, 1);
-            SetOp(0x2D, Instr8DEC, LocRegL, LocRegL, 1);
+            SetOp(0x3D, Instr8DEC, LocRegA, LocRegA, 4);
+            SetOp(0x05, Instr8DEC, LocRegB, LocRegB, 4);
+            SetOp(0x0D, Instr8DEC, LocRegC, LocRegC, 4);
+            SetOp(0x15, Instr8DEC, LocRegD, LocRegD, 4);
+            SetOp(0x1D, Instr8DEC, LocRegE, LocRegE, 4);
+            SetOp(0x25, Instr8DEC, LocRegH, LocRegH, 4);
+            SetOp(0x2D, Instr8DEC, LocRegL, LocRegL, 4);
 
-            SetOp(0x35, Instr8DEC, LocAddrHL, LocAddrHL, 3);
+            SetOp(0x35, Instr8DEC, LocAddrHL, LocAddrHL, 11);
 
-            SetOp(0x27, InstrDAA, LocRegA, LocNone, 1);
+            SetOp(0x27, InstrDAA, LocRegA, LocNone, 4);
 
-            SetOp(0x2F, InstrCPL, LocRegA, LocNone, 1);
+            SetOp(0x2F, InstrCPL, LocRegA, LocNone, 4);
 
-            SetOp(0x3F, InstrCCF, LocNone, LocNone, 1);
+            SetOp(0x3F, InstrCCF, LocNone, LocNone, 4);
 
-            SetOp(0x37, InstrSCF, LocNone, LocNone, 1);
+            SetOp(0x37, InstrSCF, LocNone, LocNone, 4);
 
-            SetOp(0x00, InstrNOP, LocNone, LocNone, 1);
+            SetOp(0x00, InstrNOP, LocNone, LocNone, 4);
 
-            SetOp(0x76, InstrHALT, LocNone, LocNone, 1);
+            SetOp(0x76, InstrHALT, LocNone, LocNone, 4);
 
-            SetOp(0xF3, InstrDI, LocNone, LocNone, 1);
+            SetOp(0xF3, InstrDI, LocNone, LocNone, 4);
 
-            SetOp(0xFB, InstrEI, LocNone, LocNone, 1);
+            SetOp(0xFB, InstrEI, LocNone, LocNone, 4);
 
-            SetOp(0x09, InstrADD, LocRegHL, LocRegBC, 3);
-            SetOp(0x19, InstrADD, LocRegHL, LocRegDE, 3);
-            SetOp(0x29, InstrADD, LocRegHL, LocRegHL, 3);
-            SetOp(0x39, InstrADD, LocRegHL, LocRegSP, 3);
+            SetOp(0x09, InstrADD, LocRegHL, LocRegBC, 11);
+            SetOp(0x19, InstrADD, LocRegHL, LocRegDE, 11);
+            SetOp(0x29, InstrADD, LocRegHL, LocRegHL, 11);
+            SetOp(0x39, InstrADD, LocRegHL, LocRegSP, 11);
 
-            SetOp(0x03, InstrINC, LocRegBC, LocRegBC, 1);
-            SetOp(0x13, InstrINC, LocRegDE, LocRegDE, 1);
-            SetOp(0x23, InstrINC, LocRegHL, LocRegHL, 1);
-            SetOp(0x33, InstrINC, LocRegSP, LocRegSP, 1);
+            SetOp(0x03, InstrINC, LocRegBC, LocRegBC, 6);
+            SetOp(0x13, InstrINC, LocRegDE, LocRegDE, 6);
+            SetOp(0x23, InstrINC, LocRegHL, LocRegHL, 6);
+            SetOp(0x33, InstrINC, LocRegSP, LocRegSP, 6);
 
-            SetOp(0x0B, InstrDEC, LocRegBC, LocRegBC, 1);
-            SetOp(0x1B, InstrDEC, LocRegDE, LocRegDE, 1);
-            SetOp(0x2B, InstrDEC, LocRegHL, LocRegHL, 1);
-            SetOp(0x3B, InstrDEC, LocRegSP, LocRegSP, 1);
+            SetOp(0x0B, InstrDEC, LocRegBC, LocRegBC, 6);
+            SetOp(0x1B, InstrDEC, LocRegDE, LocRegDE, 6);
+            SetOp(0x2B, InstrDEC, LocRegHL, LocRegHL, 6);
+            SetOp(0x3B, InstrDEC, LocRegSP, LocRegSP, 6);
 
-            SetOp(0x07, InstrRLCA, LocRegA, LocNone, 1);
+            SetOp(0x07, InstrRLCA, LocRegA, LocNone, 4);
 
-            SetOp(0x17, InstrRLA, LocRegA, LocNone, 1);
+            SetOp(0x17, InstrRLA, LocRegA, LocNone, 4);
 
-            SetOp(0x0F, InstrRRCA, LocRegA, LocNone, 1);
+            SetOp(0x0F, InstrRRCA, LocRegA, LocNone, 4);
 
-            SetOp(0x1F, InstrRRA, LocRegA, LocNone, 1);
+            SetOp(0x1F, InstrRRA, LocRegA, LocNone, 4);
 
-            SetOp(0xC3, InstrJP, LocNone, Loc16Immediate, 3);
+            SetOp(0xC3, InstrJP, LocNone, Loc16Immediate, 10);
 
-            SetOp(0xC2, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xD2, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xE2, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xF2, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xCA, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xDA, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xEA, InstrJPc, LocNone, Loc16Immediate, 3);
-            SetOp(0xFA, InstrJPc, LocNone, Loc16Immediate, 3);
+            SetOp(0xC2, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xD2, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xE2, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xF2, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xCA, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xDA, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xEA, InstrJPc, LocNone, Loc16Immediate, 10);
+            SetOp(0xFA, InstrJPc, LocNone, Loc16Immediate, 10);
 
-            SetOp(0x18, InstrJR, LocNone, Loc8Immediate, 3);
+            SetOp(0x18, InstrJR, LocNone, Loc8Immediate, 12);
 
-            SetOp(0x38, InstrJRC, LocNone, Loc8Immediate, 2);
+            SetOp(0x38, InstrJRC, LocNone, Loc8Immediate, 7);
 
-            SetOp(0x30, InstrJRNC, LocNone, Loc8Immediate, 2);
+            SetOp(0x30, InstrJRNC, LocNone, Loc8Immediate, 7);
 
-            SetOp(0x28, InstrJRZ, LocNone, Loc8Immediate, 2);
+            SetOp(0x28, InstrJRZ, LocNone, Loc8Immediate, 7);
 
-            SetOp(0x20, InstrJRNZ, LocNone, Loc8Immediate, 2);
+            SetOp(0x20, InstrJRNZ, LocNone, Loc8Immediate, 7);
 
-            SetOp(0xE9, InstrJP, LocNone, LocAddrHL, 1);
+            SetOp(0xE9, InstrJP, LocNone, LocRegHL, 4);
 
-            SetOp(0x10, InstrDJNZ, LocNone, Loc8Immediate, 2);
+            SetOp(0x10, InstrDJNZ, LocNone, Loc8Immediate, 8);
 
-            SetOp(0xCD, InstrCALL, LocNone, Loc16Immediate, 5);
+            SetOp(0xCD, InstrCALL, LocNone, Loc16Immediate, 17);
 
-            SetOp(0xC4, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xD4, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xE4, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xF4, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xCC, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xDC, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xEC, InstrCALLc, LocNone, Loc16Immediate, 3);
-            SetOp(0xFC, InstrCALLc, LocNone, Loc16Immediate, 3);
+            SetOp(0xC4, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xD4, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xE4, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xF4, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xCC, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xDC, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xEC, InstrCALLc, LocNone, Loc16Immediate, 10);
+            SetOp(0xFC, InstrCALLc, LocNone, Loc16Immediate, 10);
 
-            SetOp(0xC9, InstrRET, LocNone, LocNone, 3);
+            SetOp(0xC9, InstrRET, LocNone, LocNone, 10);
 
-            SetOp(0xC0, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xD0, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xE0, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xF0, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xC8, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xD8, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xE8, InstrRET, LocNone, LocNone, 1);
-            SetOp(0xF8, InstrRET, LocNone, LocNone, 1);
+            SetOp(0xC0, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xD0, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xE0, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xF0, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xC8, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xD8, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xE8, InstrRETc, LocNone, LocNone, 5);
+            SetOp(0xF8, InstrRETc, LocNone, LocNone, 5);
 
-            SetOp(0xC7, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xD7, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xE7, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xF7, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xCF, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xDF, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xEF, InstrRST, LocNone, LocNone, 3);
-            SetOp(0xFF, InstrRST, LocNone, LocNone, 3);
+            SetOp(0xC7, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xD7, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xE7, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xF7, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xCF, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xDF, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xEF, InstrRST, LocNone, LocNone, 11);
+            SetOp(0xFF, InstrRST, LocNone, LocNone, 11);
 
-            SetOp(0xDB, InstrINA, LocNone, Loc8Immediate, 3);
+            SetOp(0xDB, InstrINA, LocNone, Loc8Immediate, 11);
 
-            SetOp(0xD3, InstrOUTA, LocNone , Loc8Immediate, 3);
+            SetOp(0xD3, InstrOUTA, LocNone , Loc8Immediate, 11);
 
         }
 
