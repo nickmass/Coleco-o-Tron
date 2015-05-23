@@ -1,4 +1,0 @@
-glob:coleco-o-tron/bin/
-glob:coleco-o-tron/obj
-glob:*.suo
-glob:*~
